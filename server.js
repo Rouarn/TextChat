@@ -47,8 +47,11 @@ io.on('connection', (socket) => {
             messageHistory[side] = messageHistory[side].slice(0, 50);
         }
         
-        // 广播给所有连接的用户
-        io.emit('newMessage', { side, message });
+        // 发送给发送者自己（不触发通知）
+        socket.emit('newMessage', { side, message, fromSelf: true });
+        
+        // 广播给除发送者之外的所有连接的用户（触发通知）
+        socket.broadcast.emit('newMessage', { side, message, fromSelf: false });
         
         console.log(`收到${side}侧消息:`, text);
     });

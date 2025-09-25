@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>window.Notification 使用指南</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #7f8c8d;
+            font-size: 1.2rem;
+        }
+        
+        .content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+        }
+        
+        .info-panel, .demo-panel {
+            flex: 1;
+            min-width: 300px;
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        h2 {
+            color: #3498db;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        
+        h3 {
+            color: #2c3e50;
+            margin: 15px 0 10px;
+        }
+        
+        .code-block {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .permission-status {
+            display: flex;
+            align-items: center;
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 5px;
+            background: #f8f9fa;
+        }
+        
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        
+        .granted { background-color: #2ecc71; }
+        .denied { background-color: #e74c3c; }
+        .default { background-color: #f39c12; }
+        
+        .notification-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        label {
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        input, select, textarea {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        
+        textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+        
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2980b9;
+        }
+        
+        .btn-success {
+            background: #2ecc71;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #27ae60;
+        }
+        
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+        
+        .notification-types {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .type-btn {
+            padding: 10px;
+            background: #ecf0f1;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .type-btn:hover {
+            background: #d5dbdb;
+            transform: translateY(-2px);
+        }
+        
+        .notification-log {
+            margin-top: 20px;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            background: #f8f9fa;
+        }
+        
+        .log-entry {
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+            font-size: 14px;
+        }
+        
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+        
+        .support-check {
+            margin: 15px 0;
+            padding: 10px;
+            border-radius: 5px;
+            background: #e8f4fd;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 768px) {
+            .content {
+                flex-direction: column;
+            }
+            
+            .info-panel, .demo-panel {
+                min-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>window.Notification API 使用指南</h1>
+            <p class="subtitle">学习如何使用浏览器通知API创建丰富的用户体验</p>
+        </header>
+        
+        <div class="content">
+            <div class="info-panel">
+                <h2>Notification API 简介</h2>
+                <p>Notification API 允许网页或应用程序向用户发送通知，这些通知显示在浏览器窗口外部，即使用户当前不在相关网站上也可以看到。</p>
+                
+                <div class="support-check" id="supportCheck">
+                    <!-- 浏览器支持情况将由JavaScript动态填充 -->
+                </div>
+                
+                <h3>基本用法</h3>
+                <p>使用Notification API需要以下步骤：</p>
+                <ol>
+                    <li>检查浏览器支持情况</li>
+                    <li>请求通知权限</li>
+                    <li>创建和显示通知</li>
+                </ol>
+                
+                <h3>权限状态</h3>
+                <div class="permission-status" id="permissionStatus">
+                    <!-- 权限状态将由JavaScript动态填充 -->
+                </div>
+                
+                <h3>代码示例</h3>
+                <p>请求通知权限：</p>
+                <div class="code-block">
+// 请求通知权限
+Notification.requestPermission().then(function(permission) {
+    if (permission === 'granted') {
+        console.log('通知权限已授予');
+    }
+});
+                </div>
+                
+                <p>创建简单通知：</p>
+                <div class="code-block">
+// 创建简单通知
+if (Notification.permission === 'granted') {
+    new Notification('标题', {
+        body: '通知内容',
+        icon: '/path/to/icon.png'
+    });
+}
+                </div>
+                
+                <h3>通知选项</h3>
+                <ul>
+                    <li><strong>body</strong>: 通知的主要内容</li>
+                    <li><strong>icon</strong>: 显示在通知中的图标URL</li>
+                    <li><strong>image</strong>: 显示在通知中的图像URL</li>
+                    <li><strong>tag</strong>: 通知标签，用于替换相同标签的旧通知</li>
+                    <li><strong>requireInteraction</strong>: 通知是否需要用户交互才会关闭</li>
+                    <li><strong>actions</strong>: 通知操作按钮数组</li>
+                    <li><strong>silent</strong>: 通知是否静音（不播放声音或振动）</li>
+                </ul>
+            </div>
+            
+            <div class="demo-panel">
+                <h2>交互演示</h2>
+                
+                <div class="notification-types">
+                    <button class="type-btn" data-type="simple">简单通知</button>
+                    <button class="type-btn" data-type="with-icon">带图标通知</button>
+                    <button class="type-btn" data-type="with-image">带图片通知</button>
+                    <button class="type-btn" data-type="interactive">交互式通知</button>
+                    <button class="type-btn" data-type="persistent">持续通知</button>
+                </div>
+                
+                <div class="notification-form">
+                    <div class="form-group">
+                        <label for="notificationTitle">通知标题</label>
+                        <input type="text" id="notificationTitle" value="新消息提醒">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="notificationBody">通知内容</label>
+                        <textarea id="notificationBody">您有一条新的消息，请及时查看。</textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="notificationIcon">图标URL (可选)</label>
+                        <input type="text" id="notificationIcon" placeholder="https://example.com/icon.png">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="notificationImage">图片URL (可选)</label>
+                        <input type="text" id="notificationImage" placeholder="https://example.com/image.jpg">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="notificationTag">标签 (可选)</label>
+                        <input type="text" id="notificationTag" placeholder="unique-tag">
+                    </div>
+                    
+                    <button class="btn btn-primary" id="sendNotification">发送自定义通知</button>
+                </div>
+                
+                <div style="margin-top: 20px; display: flex; gap: 10px;">
+                    <button class="btn btn-success" id="requestPermission">请求通知权限</button>
+                    <button class="btn btn-danger" id="closeAllNotifications">关闭所有通知</button>
+                </div>
+                
+                <h3 style="margin-top: 30px;">通知日志</h3>
+                <div class="notification-log" id="notificationLog">
+                    <!-- 通知日志将由JavaScript动态填充 -->
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>© 2023 Notification API 演示 | 本页面仅用于教育目的</p>
+        </footer>
+    </div>
+
+    <script>
+        // 检查浏览器支持情况
+        const supportCheck = document.getElementById('supportCheck');
+        if ('Notification' in window) {
+            supportCheck.innerHTML = '<strong>✓ 您的浏览器支持 Notification API</strong>';
+            supportCheck.style.background = '#e8f6ef';
+        } else {
+            supportCheck.innerHTML = '<strong>✗ 您的浏览器不支持 Notification API</strong>';
+            supportCheck.style.background = '#fdeaea';
+        }
+        
+        // 更新权限状态显示
+        function updatePermissionStatus() {
+            const permissionStatus = document.getElementById('permissionStatus');
+            let statusText = '';
+            let statusClass = '';
+            
+            switch(Notification.permission) {
+                case 'granted':
+                    statusText = '通知权限已授予';
+                    statusClass = 'granted';
+                    break;
+                case 'denied':
+                    statusText = '通知权限已被拒绝';
+                    statusClass = 'denied';
+                    break;
+                default:
+                    statusText = '通知权限尚未决定';
+                    statusClass = 'default';
+            }
+            
+            permissionStatus.innerHTML = `
+                <div class="status-dot ${statusClass}"></div>
+                <span>${statusText}</span>
+            `;
+        }
+        
+        // 初始化权限状态显示
+        updatePermissionStatus();
+        
+        // 请求权限按钮
+        document.getElementById('requestPermission').addEventListener('click', function() {
+            Notification.requestPermission().then(function(permission) {
+                updatePermissionStatus();
+                addLogEntry(`权限请求结果: ${permission}`);
+            });
+        });
+        
+        // 添加日志条目
+        function addLogEntry(message) {
+            const log = document.getElementById('notificationLog');
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+        }
+        
+        // 发送自定义通知
+        document.getElementById('sendNotification').addEventListener('click', function() {
+            if (Notification.permission !== 'granted') {
+                addLogEntry('错误: 请先授予通知权限');
+                return;
+            }
+            
+            const title = document.getElementById('notificationTitle').value || '默认标题';
+            const body = document.getElementById('notificationBody').value || '默认内容';
+            const icon = document.getElementById('notificationIcon').value || '';
+            const image = document.getElementById('notificationImage').value || '';
+            const tag = document.getElementById('notificationTag').value || '';
+            
+            const options = {
+                body: body,
+                icon: icon || undefined,
+                image: image || undefined,
+                tag: tag || undefined
+            };
+            
+            // 过滤掉空值
+            Object.keys(options).forEach(key => {
+                if (options[key] === undefined) {
+                    delete options[key];
+                }
+            });
+            
+            const notification = new Notification(title, options);
+            
+            notification.onclick = function() {
+                addLogEntry(`通知被点击: "${title}"`);
+                window.focus();
+            };
+            
+            notification.onclose = function() {
+                addLogEntry(`通知已关闭: "${title}"`);
+            };
+            
+            addLogEntry(`已发送通知: "${title}"`);
+        });
+        
+        // 关闭所有通知
+        document.getElementById('closeAllNotifications').addEventListener('click', function() {
+            // 注意: 无法直接通过API关闭所有通知
+            // 这是一个演示，实际中需要跟踪创建的通知并逐个关闭
+            addLogEntry('提示: 无法通过API批量关闭通知，但可以逐个关闭');
+        });
+        
+        // 预定义通知类型
+        const notificationTypes = document.querySelectorAll('.type-btn');
+        notificationTypes.forEach(button => {
+            button.addEventListener('click', function() {
+                if (Notification.permission !== 'granted') {
+                    addLogEntry('错误: 请先授予通知权限');
+                    return;
+                }
+                
+                const type = this.getAttribute('data-type');
+                let title, options = {};
+                
+                switch(type) {
+                    case 'simple':
+                        title = '简单通知';
+                        options.body = '这是一个简单的通知示例';
+                        break;
+                    case 'with-icon':
+                        title = '带图标通知';
+                        options.body = '这个通知包含一个图标';
+                        options.icon = 'https://img.icons8.com/color/48/000000/bell.png';
+                        break;
+                    case 'with-image':
+                        title = '带图片通知';
+                        options.body = '这个通知包含一张图片';
+                        options.image = 'https://via.placeholder.com/400x200.png?text=通知图片';
+                        break;
+                    case 'interactive':
+                        title = '交互式通知';
+                        options.body = '这个通知包含操作按钮';
+                        options.actions = [
+                            { action: 'view', title: '查看' },
+                            { action: 'close', title: '关闭' }
+                        ];
+                        options.requireInteraction = true;
+                        break;
+                    case 'persistent':
+                        title = '持续通知';
+                        options.body = '这个通知需要用户交互才会关闭';
+                        options.requireInteraction = true;
+                        break;
+                }
+                
+                const notification = new Notification(title, options);
+                
+                if (options.actions) {
+                    notification.addEventListener('click', function(event) {
+                        addLogEntry(`通知操作被点击: ${event.action}`);
+                    });
+                }
+                
+                addLogEntry(`已发送${getTypeName(type)}: "${title}"`);
+            });
+        });
+        
+        // 获取通知类型名称
+        function getTypeName(type) {
+            const names = {
+                'simple': '简单通知',
+                'with-icon': '带图标通知',
+                'with-image': '带图片通知',
+                'interactive': '交互式通知',
+                'persistent': '持续通知'
+            };
+            return names[type] || '通知';
+        }
+        
+        // 初始化日志
+        addLogEntry('页面已加载，可以开始测试通知功能');
+    </script>
+</body>
+</html>
