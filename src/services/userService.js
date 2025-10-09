@@ -1,5 +1,6 @@
 import Logger from './logger.js';
 import { sanitizeUsername } from '../utils/helpers.js';
+import { toUserDTO } from '../utils/dto.js';
 
 export default class UserService {
     constructor() {
@@ -84,7 +85,7 @@ export default class UserService {
             if (now - lastActivity > inactiveThreshold) {
                 Logger.warn('清理不活跃用户', { userId: socketId, username: user.name });
                 this.removeUser(socketId);
-                io.emit('usersUpdate', this.getUsersList());
+                io.emit('users:update', this.getUsersList().map(toUserDTO));
             }
         }
     }
@@ -95,7 +96,7 @@ export default class UserService {
         for (const [socketId, typingInfo] of this.typingUsers.entries()) {
             if (now - typingInfo.timestamp > typingTimeout) {
                 this.typingUsers.delete(socketId);
-                io.emit('userStoppedTyping', { userId: socketId });
+                io.emit('typing:stop', { userId: socketId });
             }
         }
     }

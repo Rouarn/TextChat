@@ -147,6 +147,8 @@ body {
   padding: 20px;
   overflow-y: auto;
   background: #f8f9fa;
+  -webkit-overflow-scrolling: touch; /* iOS 惯性滚动 */
+  overscroll-behavior-y: contain; /* 防止滚动回弹影响整体布局 */
 }
 
 .message-bubble {
@@ -604,7 +606,8 @@ body {
   }
 
   .chat-container {
-    height: 100vh;
+    height: 100svh; /* 动态视口高度，防止移动端地址栏导致跳动 */
+    min-height: 100vh; /* 兼容不支持svh的浏览器 */
     border-radius: 0;
     max-width: none;
   }
@@ -646,7 +649,7 @@ body {
     position: fixed;
     top: 0;
     right: -300px;
-    height: 100vh;
+    height: 100svh;
     width: 280px;
     z-index: 98;
     transition: right 0.3s ease;
@@ -832,7 +835,6 @@ body {
     sans-serif;
   background: var(--bg);
   color: var(--text);
-  padding: 24px;
 }
 
 .chat-container {
@@ -1126,7 +1128,7 @@ body {
 /* 响应式优化 */
 @media (max-width: 768px) {
   .chat-container {
-    height: 100vh;
+    height: 100svh; /* 统一为动态视口高度 */
     border-radius: 0;
   }
   .header {
@@ -1254,7 +1256,34 @@ body {
   margin-right: auto;
   align-items: flex-start;
 }
-.message-bubble.own .message-info { justify-items: end; text-align: right; }
-.message-bubble.other .message-info { justify-items: start; text-align: left; }
-.message-bubble.own .message-header { align-self: flex-end; }
-.message-bubble.other .message-header { align-self: flex-start; }
+.message-bubble.own .message-info {
+  justify-items: end;
+  text-align: right;
+}
+.message-bubble.other .message-info {
+  justify-items: start;
+  text-align: left;
+}
+.message-bubble.own .message-header {
+  align-self: flex-end;
+}
+.message-bubble.other .message-header {
+  align-self: flex-start;
+}
+/* 视口高度适配变量：与 JS 动态 --vh 配合使用 */
+:root {
+  --vh: 1vh;
+}
+
+@media (max-width: 768px) {
+  .chat-container {
+    height: calc(var(--vh) * 100);
+    min-height: 100dvh; /* 现代浏览器动态视口 */
+    border-radius: 0;
+    max-width: none;
+  }
+
+  .sidebar {
+    height: calc(var(--vh) * 100);
+  }
+}

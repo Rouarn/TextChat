@@ -1,7 +1,7 @@
 // 实时文本聊天系统 - 客户端应用
 
 // 全局变量
-const socket = io();
+const socket = window.SocketClient && window.SocketClient.socket ? window.SocketClient.socket : io();
 let currentUser = {
   id: null,
   name: "匿名用户",
@@ -13,6 +13,45 @@ let soundEnabled = true;
 let typingTimeout = null;
 let isTyping = false;
 let lastTypingEmit = 0;
+
+// 前端交互：统一 Socket 发送封装与打字节流控制
+const TYPING_EMIT_INTERVAL = 800; // 最短间隔，避免频繁发送
+const TYPING_STOP_DELAY = 1200;   // 停止延迟，保证可靠 stop
+
+function emitSocket(event, payload = {}) {
+  try {
+    socket.emit(event, payload);
+  } catch (e) {
+    console.error("Socket emit失败:", event, e);
+  }
+}
+
+function startTyping() {
+  const now = Date.now();
+  if (!isTyping || now - lastTypingEmit > TYPING_EMIT_INTERVAL) {
+    isTyping = true;
+    lastTypingEmit = now;
+    emitSocket("typing:start", {
+      userId: currentUser.id || socket.id,
+      username: currentUser.name,
+    });
+  }
+  clearTimeout(typingTimeout);
+  typingTimeout = setTimeout(() => {
+    if (isTyping) {
+      isTyping = false;
+      emitSocket("typing:stop", { userId: currentUser.id || socket.id });
+    }
+  }, TYPING_STOP_DELAY);
+}
+
+function stopTyping() {
+  clearTimeout(typingTimeout);
+  if (isTyping) {
+    isTyping = false;
+    emitSocket("typing:stop", { userId: currentUser.id || socket.id });
+  }
+}
 
 // DOM 元素
 const elements = {
@@ -199,15 +238,16 @@ function handleResize() {
 // 设置事件监听器
 function setupEventListeners() {
   // Socket 事件
-  socket.on("connect", handleConnect);
-  socket.on("disconnect", handleDisconnect);
-  socket.on("messageHistory", handleMessageHistory);
-  socket.on("newMessage", handleNewMessage);
-  socket.on("userJoined", handleUserJoined);
-  socket.on("userLeft", handleUserLeft);
-  socket.on("userTyping", handleUserTyping);
-  socket.on("userStoppedTyping", handleUserStoppedTyping);
-  socket.on("usersUpdate", handleUsersUpdate);
+  const on = (window.SocketClient && window.SocketClient.on) || ((ev, cb) => socket.on(ev, cb));
+  on("connect", handleConnect);
+  on("disconnect", handleDisconnect);
+  on("message:history", handleMessageHistory);
+  on("message:new", handleNewMessage);
+  on("user:joined", handleUserJoined);
+  on("user:left", handleUserLeft);
+  on("typing:start", handleUserTyping);
+  on("typing:stop", handleUserStoppedTyping);
+  on("users:update", handleUsersUpdate);
 
   // UI 事件
   elements.usernameInput.addEventListener("input", handleUsernameChange);
@@ -242,13 +282,12 @@ function setupEventListeners() {
   document.addEventListener("click", closeEmojiPickerOnOutsideClick);
   document.addEventListener("touchstart", closeEmojiPickerOnOutsideClick);
 
-  // 移动端输入框焦点处理
+  // 移除移动端输入框自动滚动，避免页面向上位移
+  // 并在移动端根据视口与各区块高度动态计算消息容器高度
   if (isMobile()) {
-    elements.messageInput.addEventListener("focus", function () {
-      setTimeout(() => {
-        this.scrollIntoView({ behavior: "smooth", block: "center" });
-      }, 300);
-    });
+    window.addEventListener('resize', () => setTimeout(adjustMessagesHeight, 50));
+    elements.messageInput.addEventListener('focus', () => setTimeout(adjustMessagesHeight, 100));
+    elements.messageInput.addEventListener('blur', () => setTimeout(adjustMessagesHeight, 100));
   }
 }
 
@@ -268,7 +307,8 @@ function handleMessageHistory(history) {
   history.forEach(message => {
     displayMessage(message, false);
   });
-  scrollToBottom();
+  // 历史消息加载完成后仅滚动一次，强制到底部
+  scrollToBottom({ force: true });
 }
 
 function handleNewMessage(data) {
@@ -277,7 +317,8 @@ function handleNewMessage(data) {
     showNotification(data.message);
     playNotificationSound();
   }
-  scrollToBottom();
+  // 新消息：自己的消息强制滚动；他人消息在接近底部时滚动
+  scrollToBottom({ force: data.fromSelf === true });
 }
 
 function handleUserJoined(user) {
@@ -326,7 +367,7 @@ function handleUsernameChange() {
       id: currentUser.id || socket.id,
     };
 
-    socket.emit("updateUser", userToUpdate);
+    emitSocket("user:update", userToUpdate);
     saveUserSettings();
   }
 }
@@ -340,29 +381,12 @@ function handleMessageInputChange() {
   elements.messageInput.style.height =
     Math.min(elements.messageInput.scrollHeight, 100) + "px";
 
-  // 打字指示器（节流+可靠停止）
+  // 打字指示器（统一封装 + 节流 + 可靠停止）
   if (message) {
-    const now = Date.now();
-    if (!isTyping || now - lastTypingEmit > 800) {
-      isTyping = true;
-      lastTypingEmit = now;
-      socket.emit("typing", {
-        userId: currentUser.id || socket.id,
-        username: currentUser.name,
-      });
-    }
-  } else if (isTyping) {
-    isTyping = false;
-    socket.emit("stopTyping", { userId: currentUser.id || socket.id });
+    startTyping();
+  } else {
+    stopTyping();
   }
-
-  clearTimeout(typingTimeout);
-  typingTimeout = setTimeout(() => {
-    if (isTyping) {
-      isTyping = false;
-      socket.emit("stopTyping", { userId: currentUser.id || socket.id });
-    }
-  }, 1200);
 }
 
 function handleMessageKeyPress(e) {
@@ -391,19 +415,13 @@ function sendMessage() {
       persistentUserId: currentUser.persistentUserId,
     };
 
-    socket.emit("sendMessage", messageData);
+    emitSocket("message:send", messageData);
     elements.messageInput.value = "";
     elements.messageInput.style.height = "auto";
     elements.sendBtn.disabled = true;
 
     // 停止打字指示器
-    if (isTyping) {
-      isTyping = false;
-      socket.emit("stopTyping", { userId: currentUser.id || socket.id });
-    }
-
-    // 滚动到底部（合并更新）
-    scrollToBottom();
+    stopTyping();
 
     // 移动端关闭表情选择器
     if (isMobile()) {
@@ -467,7 +485,6 @@ function displayMessage(message, playSound = false, fromSelf = null) {
   }
 
   elements.messagesContainer.appendChild(messageDiv);
-  scrollToBottom();
 }
 
 // 更新连接状态
@@ -543,17 +560,27 @@ function toggleSound() {
 function clearMessages() {
   if (confirm("确定要清空所有聊天记录吗？")) {
     elements.messagesContainer.innerHTML = "";
+    emitSocket("message:clear");
   }
 }
 
-// 滚动到底部（平滑过渡）
-// 合并滚动到底部请求，避免频繁布局抖动
+// 智能滚动到底部（合并请求 + 接近底部判断）
 let scrollQueued = false;
-function scrollToBottom() {
+function scrollToBottom(options = {}) {
+  const { force = false } = options;
+  const el = elements.messagesContainer;
+  if (!el) return;
+
+  // 若用户不在底部附近且非强制，则不滚动，避免“狂滚动”
+  const distance = el.scrollHeight - el.scrollTop - el.clientHeight;
+  const NEAR_THRESHOLD = 80; // 距离底部小于该阈值时视为“靠近底部”
+  if (!force && distance > NEAR_THRESHOLD) {
+    return;
+  }
+
   if (scrollQueued) return;
   scrollQueued = true;
   requestAnimationFrame(() => {
-    const el = elements.messagesContainer;
     const target = el.scrollHeight;
     try {
       if (typeof el.scrollTo === "function") {
@@ -564,7 +591,6 @@ function scrollToBottom() {
     } catch (e) {
       el.scrollTop = target;
     } finally {
-      // 给浏览器一点时间完成平滑滚动，然后释放队列
       setTimeout(() => {
         scrollQueued = false;
       }, 150);
@@ -677,7 +703,7 @@ function loadUserSettings() {
           id: currentUser.id || (socket && socket.id),
         };
         try {
-          socket.emit("updateUser", userToUpdate);
+          socket.emit("user:update", userToUpdate);
         } catch (e) {
           console.error("同步用户信息失败:", e);
         }
@@ -725,6 +751,40 @@ function escapeHtml(text) {
 // 页面加载完成后初始化
 document.addEventListener("DOMContentLoaded", init);
 
+// 视口高度变量，适配移动端键盘弹出导致的高度变化
+function setViewportHeightVar() {
+  const vh = window.innerHeight * 0.01;
+  document.documentElement.style.setProperty('--vh', `${vh}px`);
+}
+document.addEventListener('DOMContentLoaded', setViewportHeightVar);
+window.addEventListener('resize', setViewportHeightVar);
+window.addEventListener('orientationchange', setViewportHeightVar);
+
+// 动态调整移动端消息容器高度，避免超出屏幕或键盘弹出导致上移
+function adjustMessagesHeight() {
+  if (!isMobile()) return;
+  const vh = window.innerHeight;
+  const headerEl = document.querySelector('.header');
+  const setupEl = document.querySelector('.user-setup');
+  const inputAreaEl = document.querySelector('.input-area');
+  const typingEl = document.getElementById('typingIndicator');
+  const messagesEl = document.getElementById('messagesContainer');
+  if (!messagesEl) return;
+
+  const used =
+    (headerEl ? headerEl.offsetHeight : 0) +
+    (setupEl ? setupEl.offsetHeight : 0) +
+    (inputAreaEl ? inputAreaEl.offsetHeight : 0) +
+    (typingEl ? typingEl.offsetHeight : 0);
+
+  const available = Math.max(180, vh - used);
+  messagesEl.style.height = available + 'px';
+  messagesEl.style.maxHeight = available + 'px';
+  messagesEl.style.flex = '0 0 auto'; // 使用固定高度而非弹性分配
+}
+
+document.addEventListener('DOMContentLoaded', () => setTimeout(adjustMessagesHeight, 0));
+
 // 防止移动端双击缩放
 let lastTouchEnd = 0;
 document.addEventListener(
@@ -739,13 +799,11 @@ document.addEventListener(
   false
 );
 
-// 防止移动端拖拽
+// 允许原生滚动（修复移动端页面滚动被阻断的问题）
 document.addEventListener(
   "touchmove",
-  function (e) {
-    if (e.target.tagName !== "TEXTAREA" && e.target.tagName !== "INPUT") {
-      e.preventDefault();
-    }
+  function () {
+    // 保持被动监听，避免阻止默认滚动行为
   },
-  { passive: false }
+  { passive: true }
 );

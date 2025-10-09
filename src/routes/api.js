@@ -1,29 +1,29 @@
 import express from 'express';
+import { ok } from '../utils/response.js';
 const router = express.Router();
 
 // 健康检查端点
 router.get('/health', (req, res) => {
     const { userService, messageService } = req.app.locals;
-    
-    res.json({
-        status: 'ok',
+    const data = {
         timestamp: new Date().toISOString(),
         uptime: process.uptime(),
         users: userService ? userService.getUsersCount() : 0,
         messages: messageService ? messageService.getMessagesCount() : 0
-    });
+    };
+    res.json(ok(data));
 });
 
 // 统计信息端点
 router.get('/stats', (req, res) => {
     const { userService, messageService } = req.app.locals;
-    
-    res.json({
+    const data = {
         onlineUsers: userService ? userService.getUsersCount() : 0,
         totalMessages: messageService ? messageService.getMessagesCount() : 0,
         typingUsers: userService ? userService.getTypingUsers().size : 0,
         uptime: process.uptime()
-    });
+    };
+    res.json(ok(data));
 });
 
 export default router;

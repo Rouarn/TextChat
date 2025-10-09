@@ -1,6 +1,7 @@
 import Logger from '../services/logger.js';
 import { validateMessage, sanitizeMessage } from '../utils/helpers.js';
 import { createRateLimiter } from '../utils/rateLimiter.js';
+import { toUserDTO, toMessageDTO } from '../utils/dto.js';
 import config from '../../config/config.js';
 
 export default class SocketController {
@@ -21,17 +22,17 @@ export default class SocketController {
         const user = this.userService.addUser(socket.id);
         
         try {
-            // 发送历史消息
-            socket.emit('messageHistory', this.messageService.getMessages());
-            
-            // 发送当前用户列表
-            socket.emit('usersUpdate', this.userService.getUsersList());
-            
-            // 通知其他用户有新用户加入
-            socket.broadcast.emit('userJoined', user);
-            
-            // 更新所有用户的在线用户列表
-            io.emit('usersUpdate', this.userService.getUsersList());
+            // 发送历史消息（DTO）
+            socket.emit('message:history', this.messageService.getMessages().map(toMessageDTO));
+
+            // 发送当前用户列表（DTO）
+            socket.emit('users:update', this.userService.getUsersList().map(toUserDTO));
+
+            // 通知其他用户有新用户加入（DTO）
+            socket.broadcast.emit('user:joined', toUserDTO(user));
+
+            // 更新所有用户的在线用户列表（DTO）
+            io.emit('users:update', this.userService.getUsersList().map(toUserDTO));
             
         } catch (error) {
             Logger.error('发送初始数据失败', { socketId: socket.id, error: error.message });
@@ -43,26 +44,26 @@ export default class SocketController {
 
     bindEventHandlers(socket, io) {
         // 处理用户信息更新
-        socket.on('updateUser', (userInfo) => {
+        socket.on('user:update', (userInfo) => {
             this.handleUpdateUser(socket, io, userInfo);
         });
 
         // 处理发送消息
-        socket.on('sendMessage', (messageData) => {
+        socket.on('message:send', (messageData) => {
             this.handleSendMessage(socket, io, messageData);
         });
 
         // 处理打字指示器
-        socket.on('typing', (data) => {
+        socket.on('typing:start', (data) => {
             this.handleTyping(socket, io, data);
         });
 
-        socket.on('stopTyping', (data) => {
+        socket.on('typing:stop', (data) => {
             this.handleStopTyping(socket, io, data);
         });
 
         // 处理清空消息
-        socket.on('clearMessages', () => {
+        socket.on('message:clear', () => {
             this.handleClearMessages(socket, io);
         });
 
@@ -82,7 +83,7 @@ export default class SocketController {
             const updatedUser = this.userService.updateUser(socket.id, userInfo);
             if (updatedUser) {
                 // 通知所有用户更新用户列表
-                io.emit('usersUpdate', this.userService.getUsersList());
+                io.emit('users:update', this.userService.getUsersList().map(toUserDTO));
             }
         } catch (error) {
             Logger.error('更新用户信息失败', { socketId: socket.id, error: error.message });
@@ -136,14 +137,14 @@ export default class SocketController {
             this.messageService.addMessage(message);
             
             // 发送给发送者（标记为自己发送的）
-            socket.emit('newMessage', {
-                message: message,
+            socket.emit('message:new', {
+                message: toMessageDTO(message),
                 fromSelf: true
             });
-            
+
             // 广播给其他用户（标记为他人发送的）
-            socket.broadcast.emit('newMessage', {
-                message: message,
+            socket.broadcast.emit('message:new', {
+                message: toMessageDTO(message),
                 fromSelf: false
             });
             
@@ -161,7 +162,7 @@ export default class SocketController {
             const user = this.userService.getUser(socket.id);
             if (user && data.username) {
                 this.userService.setUserTyping(socket.id, data.username);
-                socket.broadcast.emit('userTyping', {
+                socket.broadcast.emit('typing:start', {
                     userId: socket.id,
                     username: data.username
                 });
@@ -174,7 +175,7 @@ export default class SocketController {
     handleStopTyping(socket, io, data) {
         try {
             this.userService.removeUserTyping(socket.id);
-            socket.broadcast.emit('userStoppedTyping', {
+            socket.broadcast.emit('typing:stop', {
                 userId: socket.id
             });
         } catch (error) {
@@ -187,7 +188,7 @@ export default class SocketController {
             const user = this.userService.getUser(socket.id);
             if (user) {
                 this.messageService.clearAllMessages();
-                io.emit('messageHistory', this.messageService.getMessages());
+                io.emit('message:history', this.messageService.getMessages().map(toMessageDTO));
                 Logger.info('用户清空了所有消息', { userId: socket.id, username: user.name });
             }
         } catch (error) {
@@ -201,10 +202,10 @@ export default class SocketController {
             const user = this.userService.removeUser(socket.id);
             if (user) {
                 // 通知其他用户有用户离开
-                socket.broadcast.emit('userLeft', socket.id);
-                
+                socket.broadcast.emit('user:left', socket.id);
+
                 // 更新所有用户的在线用户列表
-                io.emit('usersUpdate', this.userService.getUsersList());
+                io.emit('users:update', this.userService.getUsersList().map(toUserDTO));
                 
                 Logger.info('用户断开连接', { 
                     socketId: socket.id, 

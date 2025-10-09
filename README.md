@@ -160,3 +160,47 @@ MIT License
 - 基础聊天功能
 - 实时消息传输
 - 用户管理
+
+## 事件契约（Socket.IO）
+
+为确保前后端一致性，以下为统一的事件命名与负载结构。所有事件均通过 Socket.IO 传递，负载采用 JSON 对象。
+
+### 事件列表
+- `users:update`：广播在线用户列表更新
+  - 负载：`{ users: UserDTO[] }`
+- `user:joined`：某用户加入
+  - 负载：`{ user: UserDTO }`
+- `user:left`：某用户离开
+  - 负载：`{ userId: string }`
+- `typing:start`：用户开始输入（指示器）
+  - 负载：`{ userId: string }`
+- `typing:stop`：用户停止输入（指示器）
+  - 负载：`{ userId: string }`
+- `message:history`：同步当前消息历史
+  - 负载：`{ messages: MessageDTO[] }`
+- `message:new`：新消息广播（服务器推送）
+  - 负载：`{ message: MessageDTO }`
+- `message:send`：发送消息（客户端 -> 服务器）
+  - 负载：`{ text: string, username: string, avatar: string, userId: string }`
+- `message:clear`：清空消息（客户端 -> 服务器）
+  - 负载：`{}`（无负载）
+
+### DTO 定义（参考 `src/utils/dto.js`）
+- `UserDTO`
+  - 字段：`id: string`、`name: string`、`avatar: string`
+  - 可选：`isTyping?: boolean`、`persistentUserId?: string`、`sessionId?: string`
+- `MessageDTO`
+  - 字段：`id: string`、`text: string`、`username: string`、`avatar: string`、`userId: string`、`timestamp: string`
+  - 服务器补充：`serverTimestamp: string`（由服务端在入库/广播前添加）
+
+### 交互流程示例
+- 客户端初始化：连接后订阅 `message:history`、`users:update`，本地设置通过 `user:update`（由后端在连接处理时统一）同步。
+- 输入指示：在输入时节流发送 `typing:start`，停止后延迟发送 `typing:stop`，避免抖动。
+- 发送消息：客户端触发 `message:send`，后端校验并广播 `message:new` 与最新 `message:history`。
+- 清空消息：客户端触发 `message:clear`，服务端清理并广播空的 `message:history`。
+
+### 约定与原则
+- 事件命名使用 `:` 分隔语义层级，保持简洁一致。
+- 负载中 ID 使用字符串（`string`），时间戳统一 ISO 字符串。
+- 所有广播负载均使用 DTO（服务端通过 `toUserDTO`、`toMessageDTO` 生成）。
+- 客户端通过统一封装层（`public/js/socketClient.js`）进行 `emit/on/once` 调用。
