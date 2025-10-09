@@ -20,5 +20,8 @@ export function toMessageDTO(message) {
     userId: message.userId,
     username: message.username,
     avatar: message.avatar,
+    // 保留用于客户端归属判断的稳定字段
+    sessionId: message.sessionId || null,
+    persistentUserId: message.persistentUserId || null,
   };
 }

@@ -1,7 +1,10 @@
 // 实时文本聊天系统 - 客户端应用
 
 // 全局变量
-const socket = window.SocketClient && window.SocketClient.socket ? window.SocketClient.socket : io();
+const socket =
+  window.SocketClient && window.SocketClient.socket
+    ? window.SocketClient.socket
+    : io();
 let currentUser = {
   id: null,
   name: "匿名用户",
@@ -16,7 +19,7 @@ let lastTypingEmit = 0;
 
 // 前端交互：统一 Socket 发送封装与打字节流控制
 const TYPING_EMIT_INTERVAL = 800; // 最短间隔，避免频繁发送
-const TYPING_STOP_DELAY = 1200;   // 停止延迟，保证可靠 stop
+const TYPING_STOP_DELAY = 1200; // 停止延迟，保证可靠 stop
 
 function emitSocket(event, payload = {}) {
   try {
@@ -238,7 +241,9 @@ function handleResize() {
 // 设置事件监听器
 function setupEventListeners() {
   // Socket 事件
-  const on = (window.SocketClient && window.SocketClient.on) || ((ev, cb) => socket.on(ev, cb));
+  const on =
+    (window.SocketClient && window.SocketClient.on) ||
+    ((ev, cb) => socket.on(ev, cb));
   on("connect", handleConnect);
   on("disconnect", handleDisconnect);
   on("message:history", handleMessageHistory);
@@ -285,9 +290,15 @@ function setupEventListeners() {
   // 移除移动端输入框自动滚动，避免页面向上位移
   // 并在移动端根据视口与各区块高度动态计算消息容器高度
   if (isMobile()) {
-    window.addEventListener('resize', () => setTimeout(adjustMessagesHeight, 50));
-    elements.messageInput.addEventListener('focus', () => setTimeout(adjustMessagesHeight, 100));
-    elements.messageInput.addEventListener('blur', () => setTimeout(adjustMessagesHeight, 100));
+    window.addEventListener("resize", () =>
+      setTimeout(adjustMessagesHeight, 50)
+    );
+    elements.messageInput.addEventListener("focus", () =>
+      setTimeout(adjustMessagesHeight, 100)
+    );
+    elements.messageInput.addEventListener("blur", () =>
+      setTimeout(adjustMessagesHeight, 100)
+    );
   }
 }
 
@@ -502,7 +513,6 @@ function updateOnlineCount() {
 function updateUsersList() {
   const fragment = document.createDocumentFragment();
   onlineUsers.forEach(user => {
-    console.log("user: ", user);
     const userDiv = document.createElement("div");
     userDiv.className = "user-item";
     const statusDiv = document.createElement("div");
@@ -695,7 +705,9 @@ function loadUserSettings() {
 
     // 在加载完成后，将本地用户名/头像与服务器同步
     // 如果已连接，立即发送；否则在连接建立后发送一次
-    const hasProfile = Boolean(currentUser.name && currentUser.name !== "匿名用户") || Boolean(currentUser.avatar && currentUser.avatar !== "U");
+    const hasProfile =
+      Boolean(currentUser.name && currentUser.name !== "匿名用户") ||
+      Boolean(currentUser.avatar && currentUser.avatar !== "U");
     if (hasProfile) {
       const emitUpdate = () => {
         const userToUpdate = {
@@ -754,21 +766,21 @@ document.addEventListener("DOMContentLoaded", init);
 // 视口高度变量，适配移动端键盘弹出导致的高度变化
 function setViewportHeightVar() {
   const vh = window.innerHeight * 0.01;
-  document.documentElement.style.setProperty('--vh', `${vh}px`);
+  document.documentElement.style.setProperty("--vh", `${vh}px`);
 }
-document.addEventListener('DOMContentLoaded', setViewportHeightVar);
-window.addEventListener('resize', setViewportHeightVar);
-window.addEventListener('orientationchange', setViewportHeightVar);
+document.addEventListener("DOMContentLoaded", setViewportHeightVar);
+window.addEventListener("resize", setViewportHeightVar);
+window.addEventListener("orientationchange", setViewportHeightVar);
 
 // 动态调整移动端消息容器高度，避免超出屏幕或键盘弹出导致上移
 function adjustMessagesHeight() {
   if (!isMobile()) return;
   const vh = window.innerHeight;
-  const headerEl = document.querySelector('.header');
-  const setupEl = document.querySelector('.user-setup');
-  const inputAreaEl = document.querySelector('.input-area');
-  const typingEl = document.getElementById('typingIndicator');
-  const messagesEl = document.getElementById('messagesContainer');
+  const headerEl = document.querySelector(".header");
+  const setupEl = document.querySelector(".user-setup");
+  const inputAreaEl = document.querySelector(".input-area");
+  const typingEl = document.getElementById("typingIndicator");
+  const messagesEl = document.getElementById("messagesContainer");
   if (!messagesEl) return;
 
   const used =
@@ -778,12 +790,14 @@ function adjustMessagesHeight() {
     (typingEl ? typingEl.offsetHeight : 0);
 
   const available = Math.max(180, vh - used);
-  messagesEl.style.height = available + 'px';
-  messagesEl.style.maxHeight = available + 'px';
-  messagesEl.style.flex = '0 0 auto'; // 使用固定高度而非弹性分配
+  messagesEl.style.height = available + "px";
+  messagesEl.style.maxHeight = available + "px";
+  messagesEl.style.flex = "0 0 auto"; // 使用固定高度而非弹性分配
 }
 
-document.addEventListener('DOMContentLoaded', () => setTimeout(adjustMessagesHeight, 0));
+document.addEventListener("DOMContentLoaded", () =>
+  setTimeout(adjustMessagesHeight, 0)
+);
 
 // 防止移动端双击缩放
 let lastTouchEnd = 0;

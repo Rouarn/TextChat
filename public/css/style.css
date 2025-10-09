@@ -161,24 +161,7 @@ body {
   flex-direction: column;
 }
 
-.message-bubble.own {
-  margin-left: auto;
-  align-self: flex-end;
-  align-items: flex-end;
-}
-
-.message-bubble.other {
-  margin-right: auto;
-  align-self: flex-start;
-  align-items: flex-start;
-}
-
-.message-header {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  width: 100%;
-}
+/* message-header 的详细布局在后续主题与布局优化段中统一设置 */
 
 .message-avatar {
   width: 40px;
@@ -204,14 +187,6 @@ body {
   min-width: 0;
   display: flex;
   flex-direction: column;
-}
-
-.message-bubble.own .message-info {
-  align-items: flex-end;
-}
-
-.message-bubble.other .message-info {
-  align-items: flex-start;
 }
 
 .message-username {
@@ -1296,18 +1271,24 @@ body {
 }
 
 /* === Color accents additions: 更鲜明但不浮夸的点缀 === */
-.header { position: relative; }
+.header {
+  position: relative;
+}
 .header::after {
   content: "";
   position: absolute;
-  left: 0; right: 0; bottom: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   height: 3px;
   background: linear-gradient(90deg, var(--accent-500), var(--accent-600));
   opacity: 0.65;
 }
 .app-title i,
 .online-users i,
-.sidebar-header i { color: var(--accent-600); }
+.sidebar-header i {
+  color: var(--accent-600);
+}
 
 /* 消息气泡侧边色条，增强区分度 */
 .message-bubble.other .message-content {
@@ -1319,7 +1300,9 @@ body {
 
 /* 表情交互增加色彩反馈 */
 .emoji-item:hover,
-.emoji-item:active { background: var(--accent-50); }
+.emoji-item:active {
+  background: var(--accent-50);
+}
 
 /* 头像更统一的品牌蓝，并增加细微立体感 */
 .avatar {
@@ -1328,7 +1311,9 @@ body {
 }
 
 /* 侧栏用户项左侧色条 */
-.user-item:hover { box-shadow: inset 3px 0 0 var(--accent-600); }
+.user-item:hover {
+  box-shadow: inset 3px 0 0 var(--accent-600);
+}
 
 /* 发送按钮悬停更柔和的蓝 */
 .send-btn:hover {
