@@ -6,10 +6,7 @@
   "main": "src/app.js",
   "scripts": {
     "start": "node src/server.js",
-    "dev": "cross-env NODE_ENV=development node src/server.js",
-    "prod": "cross-env NODE_ENV=production node src/server.js",
-    "clean": "rimraf logs/*.log",
-    "setup": "cpy .env.example .env"
+    "dev": "cross-env NODE_ENV=development node src/server.js"
   },
   "dependencies": {
     "compression": "^1.8.1",
@@ -17,9 +14,7 @@
     "socket.io": "^4.7.2"
   },
   "devDependencies": {
-    "cpy-cli": "^4.2.0",
-    "cross-env": "^7.0.3",
-    "rimraf": "^5.0.10"
+    "cross-env": "^7.0.3"
   },
   "keywords": [
     "chat",
