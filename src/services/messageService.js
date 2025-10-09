@@ -20,8 +20,8 @@ class MessageService {
         
         Logger.info('新消息已添加', { 
             messageId: message.id, 
-            userId: message.user?.id,
-            username: message.user?.name 
+            userId: message.userId,
+            username: message.username 
         });
     }
 

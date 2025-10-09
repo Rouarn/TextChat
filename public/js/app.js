@@ -6,6 +6,7 @@ let currentUser = {
   id: null,
   name: "匿名用户",
   avatar: "U",
+  persistentUserId: null,
 };
 let onlineUsers = new Map();
 let soundEnabled = true;
@@ -170,7 +171,7 @@ function handleMessageHistory(history) {
 }
 
 function handleNewMessage(data) {
-  displayMessage(data.message, !data.fromSelf);
+  displayMessage(data.message, !data.fromSelf, data.fromSelf);
   if (!data.fromSelf) {
     showNotification(data.message);
     playNotificationSound();
@@ -217,7 +218,14 @@ function handleUsernameChange() {
     currentUser.name = username;
     currentUser.avatar = username.charAt(0).toUpperCase();
     elements.userAvatar.textContent = currentUser.avatar;
-    socket.emit("updateUser", currentUser);
+    
+    // 确保用户ID正确设置
+    const userToUpdate = {
+      ...currentUser,
+      id: currentUser.id || socket.id
+    };
+    
+    socket.emit("updateUser", userToUpdate);
     saveUserSettings();
   }
 }
@@ -235,7 +243,7 @@ function handleMessageInputChange() {
   if (message && !isTyping) {
     isTyping = true;
     socket.emit("typing", {
-      userId: currentUser.id,
+      userId: currentUser.id || socket.id,
       username: currentUser.name,
     });
   }
@@ -244,7 +252,7 @@ function handleMessageInputChange() {
   typingTimeout = setTimeout(() => {
     if (isTyping) {
       isTyping = false;
-      socket.emit("stopTyping", { userId: currentUser.id });
+      socket.emit("stopTyping", { userId: currentUser.id || socket.id });
     }
   }, 1000);
 }
@@ -266,7 +274,9 @@ function sendMessage() {
       username: currentUser.name,
       avatar: currentUser.avatar,
       timestamp: new Date().toISOString(),
-      userId: currentUser.id,
+      userId: currentUser.id || socket.id,
+      sessionId: currentUser.sessionId,
+      persistentUserId: currentUser.persistentUserId,
     };
 
     socket.emit("sendMessage", messageData);
@@ -277,7 +287,7 @@ function sendMessage() {
     // 停止打字指示器
     if (isTyping) {
       isTyping = false;
-      socket.emit("stopTyping", { userId: currentUser.id });
+      socket.emit("stopTyping", { userId: currentUser.id || socket.id });
     }
 
     // 移动端关闭表情选择器
@@ -288,25 +298,52 @@ function sendMessage() {
 }
 
 // 显示消息
-function displayMessage(message, playSound = false) {
+function displayMessage(message, playSound = false, fromSelf = null) {
   const messageDiv = document.createElement("div");
-  messageDiv.className = `message-bubble ${
-    message.userId === currentUser.id ? "own" : "other"
-  }`;
+  // 判断是否为自己的消息
+  let isOwnMessage;
+  if (fromSelf !== null) {
+    // 新消息使用服务器提供的fromSelf标记
+    isOwnMessage = fromSelf;
+  } else {
+    // 历史消息优先使用持久化用户ID，其次使用会话ID或用户名进行判断
+    isOwnMessage = (message.persistentUserId && message.persistentUserId === currentUser.persistentUserId) ||
+                   (message.sessionId && message.sessionId === currentUser.sessionId) ||
+                   (message.username === currentUser.name);
+  }
+  
+  messageDiv.className = `message-bubble ${isOwnMessage ? "own" : "other"}`;
 
   const time = new Date(message.timestamp).toLocaleTimeString("zh-CN", {
     hour: "2-digit",
     minute: "2-digit",
   });
 
-  messageDiv.innerHTML = `
-    <div class="message-header">
-      <span class="message-avatar">${message.avatar}</span>
-      <span class="message-username">${message.username}</span>
-      <span class="message-time">${time}</span>
-    </div>
-    <div class="message-content">${escapeHtml(message.text)}</div>
-  `;
+  if (isOwnMessage) {
+    // 自己的消息：头像在右边
+    messageDiv.innerHTML = `
+      <div class="message-header">
+        <div class="message-info">
+          <div class="message-username">${message.username}</div>
+          <div class="message-content">${escapeHtml(message.text)}</div>
+          <div class="message-time">${time}</div>
+        </div>
+        <div class="message-avatar">${message.avatar}</div>
+      </div>
+    `;
+  } else {
+    // 他人的消息：头像在左边
+    messageDiv.innerHTML = `
+      <div class="message-header">
+        <div class="message-avatar">${message.avatar}</div>
+        <div class="message-info">
+          <div class="message-username">${message.username}</div>
+          <div class="message-content">${escapeHtml(message.text)}</div>
+          <div class="message-time">${time}</div>
+        </div>
+      </div>
+    `;
+  }
 
   elements.messagesContainer.appendChild(messageDiv);
   scrollToBottom();
@@ -424,26 +461,42 @@ function showNotification(message) {
 // 保存用户设置
 function saveUserSettings() {
   try {
-    localStorage.setItem(
-      "chatSettings",
-      JSON.stringify({
-        username: currentUser.name,
-        soundEnabled: soundEnabled,
-      })
-    );
-  } catch (e) {}
+    const chatUserSettings = {
+      name: currentUser.name,
+      avatar: currentUser.avatar,
+      soundEnabled: soundEnabled,
+      userId: currentUser.id,
+      lastLoginTime: new Date().toISOString(),
+      // 保持当前会话ID，不要在每次保存时重新生成
+      sessionId: currentUser.sessionId,
+      persistentUserId: currentUser.persistentUserId
+    };
+    localStorage.setItem("chatUserSettings", JSON.stringify(chatUserSettings));
+  } catch (e) {
+    console.error('保存用户设置失败:', e);
+  }
 }
 
 // 加载用户设置
 function loadUserSettings() {
   try {
     const settings = JSON.parse(
-      localStorage.getItem("chatSettings") || "{}"
+      localStorage.getItem("chatUserSettings") || "{}"
     );
-    if (settings.username) {
-      elements.usernameInput.value = settings.username;
-      handleUsernameChange();
+    
+    // 加载用户名
+    if (settings.name) {
+      currentUser.name = settings.name;
+      elements.usernameInput.value = settings.name;
     }
+    
+    // 加载头像
+    if (settings.avatar) {
+      currentUser.avatar = settings.avatar;
+      elements.userAvatar.textContent = settings.avatar;
+    }
+    
+    // 加载声音设置
     if (typeof settings.soundEnabled === "boolean") {
       soundEnabled = settings.soundEnabled;
       elements.soundToggle.classList.toggle("active", soundEnabled);
@@ -452,7 +505,37 @@ function loadUserSettings() {
         ? "fas fa-volume-up"
         : "fas fa-volume-mute";
     }
-  } catch (e) {}
+    
+    // 设置持久化用户ID用于消息归属判断
+    if (settings.persistentUserId) {
+      currentUser.persistentUserId = settings.persistentUserId;
+    } else {
+      currentUser.persistentUserId = generatePersistentUserId();
+      saveUserSettings();
+    }
+    
+    // 设置会话ID（每次刷新都会重新生成）
+    if (settings.sessionId) {
+      currentUser.sessionId = settings.sessionId;
+    } else {
+      currentUser.sessionId = generateSessionId();
+      saveUserSettings();
+    }
+    
+  } catch (e) {
+    console.error('加载用户设置失败:', e);
+  }
+}
+
+// 生成会话ID
+function generateSessionId() {
+  return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+}
+
+// 生成持久化用户ID
+function generatePersistentUserId() {
+  // 生成一个永久的用户ID，基于时间戳和随机数
+  return 'user_' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 9);
 }
 
 // HTML转义

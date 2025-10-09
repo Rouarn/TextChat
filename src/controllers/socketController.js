@@ -95,6 +95,15 @@ class SocketController {
             
             // 获取用户信息
             const user = this.userService.getUser(socket.id);
+            Logger.info('发送消息时的用户信息', { 
+                socketId: socket.id, 
+                user: user,
+                messageData: { 
+                    userId: messageData.userId, 
+                    username: messageData.username 
+                }
+            });
+            
             if (!user) {
                 socket.emit('error', { message: '用户信息不存在' });
                 return;
@@ -105,11 +114,11 @@ class SocketController {
                 id: messageData.id || (Date.now() + Math.random()),
                 text: sanitizeMessage(messageData.text),
                 timestamp: messageData.timestamp || new Date().toISOString(),
-                user: {
-                    id: user.id,
-                    name: user.name,
-                    avatar: user.avatar
-                }
+                userId: user.id,
+                username: user.name,
+                avatar: user.avatar,
+                sessionId: messageData.sessionId || null,
+                persistentUserId: messageData.persistentUserId || null
             };
             
             // 添加到消息列表
