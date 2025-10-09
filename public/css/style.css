@@ -1225,8 +1225,10 @@ body {
   margin-bottom: 12px;
 }
 .messages-container {
-  padding: 14px;
-  scroll-behavior: smooth; /* 保持平滑滚动 */
+  padding: 12px;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
 }
 
 /* 侧栏用户项弱化盒感 */
@@ -1286,4 +1288,50 @@ body {
   .sidebar {
     height: calc(var(--vh) * 100);
   }
+  .messages-container {
+    flex: 0 0 auto;
+    max-height: none;
+    padding: 12px;
+  }
+}
+
+/* === Color accents additions: 更鲜明但不浮夸的点缀 === */
+.header { position: relative; }
+.header::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent-500), var(--accent-600));
+  opacity: 0.65;
+}
+.app-title i,
+.online-users i,
+.sidebar-header i { color: var(--accent-600); }
+
+/* 消息气泡侧边色条，增强区分度 */
+.message-bubble.other .message-content {
+  box-shadow: inset 3px 0 0 rgba(37, 99, 235, 0.35);
+}
+.message-bubble.own .message-content {
+  box-shadow: inset -3px 0 0 rgba(16, 185, 129, 0.35);
+}
+
+/* 表情交互增加色彩反馈 */
+.emoji-item:hover,
+.emoji-item:active { background: var(--accent-50); }
+
+/* 头像更统一的品牌蓝，并增加细微立体感 */
+.avatar {
+  background: var(--accent-600);
+  box-shadow: 0 0 0 2px var(--surface), 0 6px 16px rgba(17, 24, 39, 0.08);
+}
+
+/* 侧栏用户项左侧色条 */
+.user-item:hover { box-shadow: inset 3px 0 0 var(--accent-600); }
+
+/* 发送按钮悬停更柔和的蓝 */
+.send-btn:hover {
+  background: var(--accent-500);
+  border-color: var(--accent-500);
 }
