@@ -36176,7 +36176,7 @@ var env = process.env.NODE_ENV || "development";
 var baseConfig = {
   // 服务器配置
   server: {
-    port: process.env.PORT || 3e3,
+    port: process.env.PORT || 9865,
     environment: process.env.NODE_ENV || "development"
   },
   // 聊天配置
