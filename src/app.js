@@ -38,12 +38,18 @@ const socketController = new SocketController(userService, messageService);
 app.locals.userService = userService;
 app.locals.messageService = messageService;
 
-// 兼容ESM的__dirname
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// 兼容 ESM 与 CJS 的路径解析
+const isCJS = typeof __dirname !== 'undefined' && typeof __filename !== 'undefined';
+const resolvedFilename = isCJS ? __filename : fileURLToPath(import.meta.url);
+const resolvedDirname = isCJS ? __dirname : path.dirname(resolvedFilename);
 
 // 静态文件服务 - 启用缓存/ETag/不可变资源提示
-app.use(express.static(path.join(__dirname, "../public"), {
+// 生产环境下使用打包输出的 dist 目录（打包后 server.js 位于 dist/，此处使用当前目录）
+// 开发环境使用 public 目录
+const staticRoot = (process.env.NODE_ENV === 'production')
+  ? path.join(resolvedDirname, ".")
+  : path.join(resolvedDirname, "../public");
+app.use(express.static(staticRoot, {
   maxAge: '7d',
   etag: true,
   lastModified: true,

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>实时文本聊天</title>
+    <!-- 现代优雅字体 -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="/css/style.css" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💬</text></svg>"
+    />
+  </head>
+  <body>
+    <div class="chat-container">
+      <!-- 头部 -->
+      <div class="header">
+        <div class="header-inner">
+          <h1 class="app-title">
+            <i class="fas fa-comments"></i>
+            实时文本聊天
+          </h1>
+          <div class="connection-status">
+            <div class="status-dot" id="statusDot"></div>
+            <span id="statusText">连接中...</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 用户设置区域 -->
+      <div class="user-setup">
+        <div class="user-info">
+          <div class="avatar" id="userAvatar">U</div>
+          <input
+            type="text"
+            class="username-input"
+            id="usernameInput"
+            placeholder="输入您的昵称"
+            maxlength="20"
+          />
+          <button
+            class="mobile-nav-btn"
+            id="mobileNavBtn"
+            aria-label="打开在线用户"
+          >
+            <i class="fas fa-users"></i>
+          </button>
+        </div>
+        <div class="online-users">
+          <i class="fas fa-users"></i>
+          在线用户: <span id="onlineCount">0</span>
+        </div>
+      </div>
+
+      <!-- 主要内容区域 -->
+      <div class="main-content">
+        <!-- 聊天区域 -->
+        <div class="chat-area">
+          <!-- 消息容器 -->
+          <div class="messages-container" id="messagesContainer">
+            <!-- 消息将在这里显示 -->
+          </div>
+
+          <!-- 打字指示器 -->
+          <div class="typing-indicator" id="typingIndicator">
+            <span id="typingUser">用户</span> 正在输入
+            <span class="typing-dots">
+              <span></span>
+              <span></span>
+              <span></span>
+            </span>
+          </div>
+
+          <!-- 输入区域 -->
+          <div class="input-area">
+            <div class="input-container">
+              <button class="emoji-btn" id="emojiBtn" aria-label="打开表情">
+                😊
+              </button>
+              <textarea
+                class="message-input"
+                id="messageInput"
+                placeholder="输入消息..."
+                rows="1"
+                maxlength="500"
+              ></textarea>
+              <button
+                class="send-btn"
+                id="sendBtn"
+                disabled
+                aria-label="发送消息"
+              >
+                <i class="fas fa-paper-plane"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 侧边栏 -->
+        <div class="sidebar" id="sidebar">
+          <div class="sidebar-header">
+            <i class="fas fa-users"></i>
+            <span>在线用户</span>
+          </div>
+          <div class="users-list" id="usersList">
+            <!-- 用户列表将在这里显示 -->
+          </div>
+          <div class="controls">
+            <button class="control-btn sound-toggle active" id="soundToggle">
+              <i class="fas fa-volume-up"></i>
+              <span>消息提示音</span>
+            </button>
+            <button class="control-btn clear-btn" id="clearBtn">
+              <i class="fas fa-trash"></i>
+              <span>清空聊天记录</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="emoji-picker" id="emojiPicker" aria-label="表情选择">
+        <div class="emoji-grid" id="emojiGrid">
+          <!-- 表情符号将在这里显示 -->
+        </div>
+      </div>
+
+      <!-- 移动端遮罩层 -->
+      <div class="mobile-overlay" id="mobileOverlay"></div>
+    </div>
+
+    <!-- 使用 ESModule 方式引入前端脚本（已通过构建打包） -->
+    <script type="module" src="/js/socketClient.js"></script>
+    <script type="module" src="/js/app.js"></script>
+  </body>
+</html>

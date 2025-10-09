@@ -136,9 +136,8 @@
       <div class="mobile-overlay" id="mobileOverlay"></div>
     </div>
 
-    <!-- 引入Socket.IO与封装层，再引入应用脚本 -->
-    <script src="/socket.io/socket.io.js"></script>
-    <script src="/js/socketClient.js"></script>
-    <script src="/js/app.js"></script>
+    <!-- 使用 ESModule 方式引入前端脚本（已通过构建打包） -->
+    <script type="module" src="/js/socketClient.js"></script>
+    <script type="module" src="/js/app.js"></script>
   </body>
 </html>
