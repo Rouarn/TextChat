@@ -39,17 +39,117 @@ const elements = {
 
 // 表情符号数据
 const emojis = [
-  "😀", "😃", "😄", "😁", "😆", "😅", "😂", "🤣", "😊", "😇",
-  "🙂", "🙃", "😉", "😌", "😍", "🥰", "😘", "😗", "😙", "😚",
-  "😋", "😛", "😝", "😜", "🤪", "🤨", "🧐", "🤓", "😎", "🤩",
-  "🥳", "😏", "😒", "😞", "😔", "😟", "😕", "🙁", "☹️", "😣",
-  "😖", "😫", "😩", "🥺", "😢", "😭", "😤", "😠", "😡", "🤬",
-  "🤯", "😳", "🥵", "🥶", "😱", "😨", "😰", "😥", "😓", "🤗",
-  "🤔", "🤭", "🤫", "🤥", "😶", "😐", "😑", "😬", "🙄", "😯",
-  "😦", "😧", "😮", "😲", "🥱", "😴", "🤤", "😪", "😵", "🤐",
-  "🥴", "🤢", "🤮", "🤧", "😷", "🤒", "🤕", "🤑", "🤠", "😈",
-  "👿", "👹", "👺", "🤡", "💩", "👻", "💀", "☠️", "👽", "👾",
-  "🤖", "🎃", "😺", "😸", "😹", "😻", "😼", "😽", "🙀", "😿", "😾",
+  "😀",
+  "😃",
+  "😄",
+  "😁",
+  "😆",
+  "😅",
+  "😂",
+  "🤣",
+  "😊",
+  "😇",
+  "🙂",
+  "🙃",
+  "😉",
+  "😌",
+  "😍",
+  "🥰",
+  "😘",
+  "😗",
+  "😙",
+  "😚",
+  "😋",
+  "😛",
+  "😝",
+  "😜",
+  "🤪",
+  "🤨",
+  "🧐",
+  "🤓",
+  "😎",
+  "🤩",
+  "🥳",
+  "😏",
+  "😒",
+  "😞",
+  "😔",
+  "😟",
+  "😕",
+  "🙁",
+  "☹️",
+  "😣",
+  "😖",
+  "😫",
+  "😩",
+  "🥺",
+  "😢",
+  "😭",
+  "😤",
+  "😠",
+  "😡",
+  "🤬",
+  "🤯",
+  "😳",
+  "🥵",
+  "🥶",
+  "😱",
+  "😨",
+  "😰",
+  "😥",
+  "😓",
+  "🤗",
+  "🤔",
+  "🤭",
+  "🤫",
+  "🤥",
+  "😶",
+  "😐",
+  "😑",
+  "😬",
+  "🙄",
+  "😯",
+  "😦",
+  "😧",
+  "😮",
+  "😲",
+  "🥱",
+  "😴",
+  "🤤",
+  "😪",
+  "😵",
+  "🤐",
+  "🥴",
+  "🤢",
+  "🤮",
+  "🤧",
+  "😷",
+  "🤒",
+  "🤕",
+  "🤑",
+  "🤠",
+  "😈",
+  "👿",
+  "👹",
+  "👺",
+  "🤡",
+  "💩",
+  "👻",
+  "💀",
+  "☠️",
+  "👽",
+  "👾",
+  "🤖",
+  "🎃",
+  "😺",
+  "😸",
+  "😹",
+  "😻",
+  "😼",
+  "😽",
+  "🙀",
+  "😿",
+  "😾",
 ];
 
 // 移动端检测
@@ -138,7 +238,7 @@ function setupEventListeners() {
       elements.emojiPicker.style.display = "none";
     }
   }
-  
+
   document.addEventListener("click", closeEmojiPickerOnOutsideClick);
   document.addEventListener("touchstart", closeEmojiPickerOnOutsideClick);
 
@@ -219,13 +319,13 @@ function handleUsernameChange() {
     currentUser.name = username;
     currentUser.avatar = username.charAt(0).toUpperCase();
     elements.userAvatar.textContent = currentUser.avatar;
-    
+
     // 确保用户ID正确设置
     const userToUpdate = {
       ...currentUser,
-      id: currentUser.id || socket.id
+      id: currentUser.id || socket.id,
     };
-    
+
     socket.emit("updateUser", userToUpdate);
     saveUserSettings();
   }
@@ -326,12 +426,13 @@ function displayMessage(message, playSound = false, fromSelf = null) {
     // 2) 会话ID（同一次页面会话）
     // 3) 用户ID（仅在当前客户端已明确设置时比较）
     isOwnMessage = Boolean(
-      (message.persistentUserId && message.persistentUserId === currentUser.persistentUserId) ||
-      (message.sessionId && message.sessionId === currentUser.sessionId) ||
-      (message.userId && currentUser.id && message.userId === currentUser.id)
+      (message.persistentUserId &&
+        message.persistentUserId === currentUser.persistentUserId) ||
+        (message.sessionId && message.sessionId === currentUser.sessionId) ||
+        (message.userId && currentUser.id && message.userId === currentUser.id)
     );
   }
-  
+
   messageDiv.className = `message-bubble ${isOwnMessage ? "own" : "other"}`;
 
   const time = new Date(message.timestamp).toLocaleTimeString("zh-CN", {
@@ -384,6 +485,7 @@ function updateOnlineCount() {
 function updateUsersList() {
   const fragment = document.createDocumentFragment();
   onlineUsers.forEach(user => {
+    console.log("user: ", user);
     const userDiv = document.createElement("div");
     userDiv.className = "user-item";
     const statusDiv = document.createElement("div");
@@ -433,9 +535,7 @@ function toggleSound() {
   soundEnabled = !soundEnabled;
   elements.soundToggle.classList.toggle("active", soundEnabled);
   const icon = elements.soundToggle.querySelector("i");
-  icon.className = soundEnabled
-    ? "fas fa-volume-up"
-    : "fas fa-volume-mute";
+  icon.className = soundEnabled ? "fas fa-volume-up" : "fas fa-volume-mute";
   saveUserSettings();
 }
 
@@ -465,7 +565,9 @@ function scrollToBottom() {
       el.scrollTop = target;
     } finally {
       // 给浏览器一点时间完成平滑滚动，然后释放队列
-      setTimeout(() => { scrollQueued = false; }, 150);
+      setTimeout(() => {
+        scrollQueued = false;
+      }, 150);
     }
   });
 }
@@ -514,11 +616,11 @@ function saveUserSettings() {
       lastLoginTime: new Date().toISOString(),
       // 保持当前会话ID，不要在每次保存时重新生成
       sessionId: currentUser.sessionId,
-      persistentUserId: currentUser.persistentUserId
+      persistentUserId: currentUser.persistentUserId,
     };
     localStorage.setItem("chatUserSettings", JSON.stringify(chatUserSettings));
   } catch (e) {
-    console.error('保存用户设置失败:', e);
+    console.error("保存用户设置失败:", e);
   }
 }
 
@@ -528,29 +630,27 @@ function loadUserSettings() {
     const settings = JSON.parse(
       localStorage.getItem("chatUserSettings") || "{}"
     );
-    
+
     // 加载用户名
     if (settings.name) {
       currentUser.name = settings.name;
       elements.usernameInput.value = settings.name;
     }
-    
+
     // 加载头像
     if (settings.avatar) {
       currentUser.avatar = settings.avatar;
       elements.userAvatar.textContent = settings.avatar;
     }
-    
+
     // 加载声音设置
     if (typeof settings.soundEnabled === "boolean") {
       soundEnabled = settings.soundEnabled;
       elements.soundToggle.classList.toggle("active", soundEnabled);
       const icon = elements.soundToggle.querySelector("i");
-      icon.className = soundEnabled
-        ? "fas fa-volume-up"
-        : "fas fa-volume-mute";
+      icon.className = soundEnabled ? "fas fa-volume-up" : "fas fa-volume-mute";
     }
-    
+
     // 设置持久化用户ID用于消息归属判断
     if (settings.persistentUserId) {
       currentUser.persistentUserId = settings.persistentUserId;
@@ -558,7 +658,7 @@ function loadUserSettings() {
       currentUser.persistentUserId = generatePersistentUserId();
       saveUserSettings();
     }
-    
+
     // 设置会话ID（每次刷新都会重新生成）
     if (settings.sessionId) {
       currentUser.sessionId = settings.sessionId;
@@ -566,21 +666,53 @@ function loadUserSettings() {
       currentUser.sessionId = generateSessionId();
       saveUserSettings();
     }
-    
+
+    // 在加载完成后，将本地用户名/头像与服务器同步
+    // 如果已连接，立即发送；否则在连接建立后发送一次
+    const hasProfile = Boolean(currentUser.name && currentUser.name !== "匿名用户") || Boolean(currentUser.avatar && currentUser.avatar !== "U");
+    if (hasProfile) {
+      const emitUpdate = () => {
+        const userToUpdate = {
+          ...currentUser,
+          id: currentUser.id || (socket && socket.id),
+        };
+        try {
+          socket.emit("updateUser", userToUpdate);
+        } catch (e) {
+          console.error("同步用户信息失败:", e);
+        }
+      };
+
+      if (socket && socket.connected) {
+        emitUpdate();
+      } else if (socket) {
+        socket.once("connect", () => {
+          currentUser.id = socket.id;
+          emitUpdate();
+        });
+      }
+    }
   } catch (e) {
-    console.error('加载用户设置失败:', e);
+    console.error("加载用户设置失败:", e);
   }
 }
 
 // 生成会话ID
 function generateSessionId() {
-  return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+  return (
+    "session_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9)
+  );
 }
 
 // 生成持久化用户ID
 function generatePersistentUserId() {
   // 生成一个永久的用户ID，基于时间戳和随机数
-  return 'user_' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 9);
+  return (
+    "user_" +
+    Date.now().toString(36) +
+    "_" +
+    Math.random().toString(36).substr(2, 9)
+  );
 }
 
 // HTML转义
