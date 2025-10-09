@@ -937,6 +937,7 @@ body {
 .messages-container {
   background: var(--surface);
   padding: 16px;
+  scroll-behavior: smooth; /* 新消息滚动更顺滑 */
 }
 
 .message-bubble {
@@ -944,7 +945,7 @@ body {
   margin-bottom: 14px;
 }
 .message-bubble.own .message-content {
-  background: var(--accent-600);
+  background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
   color: #fff;
 }
 .message-bubble.other .message-content {
@@ -1167,13 +1168,14 @@ body {
 
 /* === Layout polish: 减少“div div div”的盒感 === */
 .message-header {
-  align-items: flex-end;
+  align-items: flex-start; /* 头像与用户名顶部对齐 */
 }
 .message-bubble .message-info {
   display: grid;
   grid-template-columns: 1fr;
   gap: 6px;
-  max-width: min(640px, 88%);
+  width: fit-content; /* 根据内容自适应宽度 */
+  max-width: 80%;
 }
 .message-bubble.own .message-info {
   align-items: end;
@@ -1191,8 +1193,11 @@ body {
 }
 
 .message-content {
+  display: inline-block; /* 让气泡宽度随内容变化 */
   border-radius: 12px;
   padding: 12px 14px;
+  width: fit-content;
+  max-width: 70ch; /* 上限避免过长一行 */
   box-shadow: 0 6px 16px rgba(17, 24, 39, 0.05);
 }
 
@@ -1219,6 +1224,7 @@ body {
 }
 .messages-container {
   padding: 14px;
+  scroll-behavior: smooth; /* 保持平滑滚动 */
 }
 
 /* 侧栏用户项弱化盒感 */
@@ -1238,3 +1244,17 @@ body {
 .message-input {
   padding: 10px 12px;
 }
+
+/* 自己的消息在右侧，对方在左侧（强化对齐规则） */
+.message-bubble.own {
+  margin-left: auto;
+  align-items: flex-end;
+}
+.message-bubble.other {
+  margin-right: auto;
+  align-items: flex-start;
+}
+.message-bubble.own .message-info { justify-items: end; text-align: right; }
+.message-bubble.other .message-info { justify-items: start; text-align: left; }
+.message-bubble.own .message-header { align-self: flex-end; }
+.message-bubble.other .message-header { align-self: flex-start; }

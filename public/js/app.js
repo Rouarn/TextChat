@@ -446,15 +446,27 @@ function clearMessages() {
   }
 }
 
-// 滚动到底部
+// 滚动到底部（平滑过渡）
 // 合并滚动到底部请求，避免频繁布局抖动
 let scrollQueued = false;
 function scrollToBottom() {
   if (scrollQueued) return;
   scrollQueued = true;
   requestAnimationFrame(() => {
-    elements.messagesContainer.scrollTop = elements.messagesContainer.scrollHeight;
-    scrollQueued = false;
+    const el = elements.messagesContainer;
+    const target = el.scrollHeight;
+    try {
+      if (typeof el.scrollTo === "function") {
+        el.scrollTo({ top: target, behavior: "smooth" });
+      } else {
+        el.scrollTop = target;
+      }
+    } catch (e) {
+      el.scrollTop = target;
+    } finally {
+      // 给浏览器一点时间完成平滑滚动，然后释放队列
+      setTimeout(() => { scrollQueued = false; }, 150);
+    }
   });
 }
 
