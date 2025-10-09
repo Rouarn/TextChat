@@ -14,8 +14,9 @@ export default class MessageService {
         
         // 限制消息数量
         if (this.messages.length > config.chat.maxMessages) {
-            this.messages = this.messages.slice(-config.chat.maxMessages);
-            Logger.info('消息数量超限，已清理旧消息');
+            const overflow = this.messages.length - config.chat.maxMessages;
+            this.messages.splice(0, overflow);
+            Logger.info('消息数量超限，已清理旧消息', { removed: overflow });
         }
         
         Logger.info('新消息已添加', { 

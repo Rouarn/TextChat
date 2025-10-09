@@ -1,11 +1,17 @@
 import Logger from '../services/logger.js';
 import { validateMessage, sanitizeMessage } from '../utils/helpers.js';
+import { createRateLimiter } from '../utils/rateLimiter.js';
 import config from '../../config/config.js';
 
 export default class SocketController {
     constructor(userService, messageService) {
         this.userService = userService;
         this.messageService = messageService;
+        // 消息速率限制器：窗口与最大值来自配置或默认值
+        this.messageLimiter = createRateLimiter({
+            windowMs: (config.chat && config.chat.rateLimitWindowMs) || 3000,
+            max: (config.chat && config.chat.rateLimitMax) || 10
+        });
     }
 
     handleConnection(socket, io) {
@@ -86,6 +92,11 @@ export default class SocketController {
 
     handleSendMessage(socket, io, messageData) {
         try {
+            // 速率限制检查
+            if (!this.messageLimiter(socket.id)) {
+                socket.emit('error', { message: '发送过于频繁，请稍后再试' });
+                return;
+            }
             // 验证消息
             const validation = validateMessage(messageData);
             if (!validation.valid) {
@@ -154,18 +165,6 @@ export default class SocketController {
                     userId: socket.id,
                     username: data.username
                 });
-
-                // 设置超时清理
-                setTimeout(() => {
-                    const typingUsers = this.userService.getTypingUsers();
-                    if (typingUsers.has(socket.id)) {
-                        const typingInfo = typingUsers.get(socket.id);
-                        if (Date.now() - typingInfo.timestamp >= config.chat.typingTimeout) {
-                            this.userService.removeUserTyping(socket.id);
-                            io.emit('userStoppedTyping', { userId: socket.id });
-                        }
-                    }
-                }, config.chat.typingTimeout);
             }
         } catch (error) {
             Logger.error('处理打字指示器失败', { socketId: socket.id, error: error.message });

@@ -1,8 +1,9 @@
-import express, { Router } from "express";
+import express from "express";
 import http from "node:http";
 import { Server as SocketIOServer } from "socket.io";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import compression from "compression";
 
 // 导入配置和服务（ESM）
 import config from "../config/config.js";
@@ -11,6 +12,8 @@ import UserService from "./services/userService.js";
 import MessageService from "./services/messageService.js";
 import SocketController from "./controllers/socketController.js";
 import apiRoutes from "./routes/api.js";
+import notFound from "./middleware/notFound.js";
+import errorHandler from "./middleware/errorHandler.js";
 
 // 创建Express应用
 const app = express();
@@ -18,6 +21,13 @@ const server = http.createServer(app);
 const io = new SocketIOServer(server, {
   cors: config.cors,
 });
+
+// 应用基础安全/网络设定
+app.disable('x-powered-by');
+app.set('trust proxy', (config.server && config.server.trustProxy) || false);
+
+// 启用压缩以提升传输效率
+app.use(compression());
 
 // 初始化服务
 const userService = new UserService();
@@ -32,11 +42,20 @@ app.locals.messageService = messageService;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// 静态文件服务 - public目录作为根目录
-app.use(express.static(path.join(__dirname, "../public")));
+// 静态文件服务 - 启用缓存/ETag/不可变资源提示
+app.use(express.static(path.join(__dirname, "../public"), {
+  maxAge: '7d',
+  etag: true,
+  lastModified: true,
+  immutable: true
+}));
 
 // API路由
 app.use("/api", apiRoutes);
+
+// 404 与错误处理中间件
+app.use(notFound);
+app.use(errorHandler);
 
 // Socket.IO连接处理
 io.on("connection", socket => {

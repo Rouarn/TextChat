@@ -12,6 +12,7 @@ let onlineUsers = new Map();
 let soundEnabled = true;
 let typingTimeout = null;
 let isTyping = false;
+let lastTypingEmit = 0;
 
 // DOM 元素
 const elements = {
@@ -239,13 +240,20 @@ function handleMessageInputChange() {
   elements.messageInput.style.height =
     Math.min(elements.messageInput.scrollHeight, 100) + "px";
 
-  // 打字指示器
-  if (message && !isTyping) {
-    isTyping = true;
-    socket.emit("typing", {
-      userId: currentUser.id || socket.id,
-      username: currentUser.name,
-    });
+  // 打字指示器（节流+可靠停止）
+  if (message) {
+    const now = Date.now();
+    if (!isTyping || now - lastTypingEmit > 800) {
+      isTyping = true;
+      lastTypingEmit = now;
+      socket.emit("typing", {
+        userId: currentUser.id || socket.id,
+        username: currentUser.name,
+      });
+    }
+  } else if (isTyping) {
+    isTyping = false;
+    socket.emit("stopTyping", { userId: currentUser.id || socket.id });
   }
 
   clearTimeout(typingTimeout);
@@ -254,7 +262,7 @@ function handleMessageInputChange() {
       isTyping = false;
       socket.emit("stopTyping", { userId: currentUser.id || socket.id });
     }
-  }, 1000);
+  }, 1200);
 }
 
 function handleMessageKeyPress(e) {
@@ -266,8 +274,12 @@ function handleMessageKeyPress(e) {
 
 // 发送消息
 function sendMessage() {
-  const message = elements.messageInput.value.trim();
-  if (message) {
+  const raw = elements.messageInput.value || "";
+  const message = raw.trim();
+  if (!message || elements.sendBtn.disabled) {
+    return;
+  }
+  {
     const messageData = {
       id: Date.now(),
       text: message,
@@ -290,6 +302,9 @@ function sendMessage() {
       socket.emit("stopTyping", { userId: currentUser.id || socket.id });
     }
 
+    // 滚动到底部（合并更新）
+    scrollToBottom();
+
     // 移动端关闭表情选择器
     if (isMobile()) {
       elements.emojiPicker.style.display = "none";
@@ -306,10 +321,15 @@ function displayMessage(message, playSound = false, fromSelf = null) {
     // 新消息使用服务器提供的fromSelf标记
     isOwnMessage = fromSelf;
   } else {
-    // 历史消息优先使用持久化用户ID，其次使用会话ID或用户名进行判断
-    isOwnMessage = (message.persistentUserId && message.persistentUserId === currentUser.persistentUserId) ||
-                   (message.sessionId && message.sessionId === currentUser.sessionId) ||
-                   (message.username === currentUser.name);
+    // 历史消息：仅根据更稳定的标识判断归属，避免同名误判
+    // 1) 持久化用户ID（跨会话保持一致）
+    // 2) 会话ID（同一次页面会话）
+    // 3) 用户ID（仅在当前客户端已明确设置时比较）
+    isOwnMessage = Boolean(
+      (message.persistentUserId && message.persistentUserId === currentUser.persistentUserId) ||
+      (message.sessionId && message.sessionId === currentUser.sessionId) ||
+      (message.userId && currentUser.id && message.userId === currentUser.id)
+    );
   }
   
   messageDiv.className = `message-bubble ${isOwnMessage ? "own" : "other"}`;
@@ -362,17 +382,26 @@ function updateOnlineCount() {
 
 // 更新用户列表
 function updateUsersList() {
-  elements.usersList.innerHTML = "";
+  const fragment = document.createDocumentFragment();
   onlineUsers.forEach(user => {
     const userDiv = document.createElement("div");
     userDiv.className = "user-item";
-    userDiv.innerHTML = `
-      <div class="user-status"></div>
-      <div class="avatar" style="width: 32px; height: 32px; font-size: 1rem;">${user.avatar}</div>
-      <span>${user.name}</span>
-    `;
-    elements.usersList.appendChild(userDiv);
+    const statusDiv = document.createElement("div");
+    statusDiv.className = "user-status";
+    const avatarDiv = document.createElement("div");
+    avatarDiv.className = "avatar";
+    avatarDiv.style.width = "32px";
+    avatarDiv.style.height = "32px";
+    avatarDiv.style.fontSize = "1rem";
+    avatarDiv.textContent = user.avatar;
+    const nameSpan = document.createElement("span");
+    nameSpan.textContent = user.name;
+    userDiv.appendChild(statusDiv);
+    userDiv.appendChild(avatarDiv);
+    userDiv.appendChild(nameSpan);
+    fragment.appendChild(userDiv);
   });
+  elements.usersList.replaceChildren(fragment);
 }
 
 // 生成表情选择器
@@ -418,11 +447,15 @@ function clearMessages() {
 }
 
 // 滚动到底部
+// 合并滚动到底部请求，避免频繁布局抖动
+let scrollQueued = false;
 function scrollToBottom() {
-  setTimeout(() => {
-    elements.messagesContainer.scrollTop =
-      elements.messagesContainer.scrollHeight;
-  }, 100);
+  if (scrollQueued) return;
+  scrollQueued = true;
+  requestAnimationFrame(() => {
+    elements.messagesContainer.scrollTop = elements.messagesContainer.scrollHeight;
+    scrollQueued = false;
+  });
 }
 
 // 播放通知声音
