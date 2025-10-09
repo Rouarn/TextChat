@@ -1,5 +1,5 @@
-// 生产环境配置
-module.exports = {
+// 生产环境配置（ESM）
+export default {
   server: {
     port: process.env.PORT || 3000,
     trustProxy: true, // 生产环境通常在代理后面

@@ -1,5 +1,7 @@
-// 应用配置文件
-const path = require('path');
+// 应用配置文件（ESM）
+import path from 'node:path';
+import development from './development.js';
+import production from './production.js';
 
 // 获取环境
 const env = process.env.NODE_ENV || 'development';
@@ -36,14 +38,8 @@ const baseConfig = {
     }
 };
 
-// 尝试加载环境特定配置
-let envConfig = {};
-try {
-    const envConfigPath = path.join(__dirname, `${env}.js`);
-    envConfig = require(envConfigPath);
-} catch (error) {
-    console.warn(`环境配置文件 ${env}.js 不存在，使用默认配置`);
-}
+// 加载环境特定配置（静态导入，避免动态require）
+const envConfig = env === 'production' ? production : development;
 
 // 深度合并配置
 function deepMerge(target, source) {
@@ -60,4 +56,4 @@ function deepMerge(target, source) {
     return result;
 }
 
-module.exports = deepMerge(baseConfig, envConfig);
+export default deepMerge(baseConfig, envConfig);

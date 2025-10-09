@@ -1,8 +1,8 @@
-const Logger = require('../services/logger');
-const { validateMessage, sanitizeMessage } = require('../utils/helpers');
-const config = require('../../config/config');
+import Logger from '../services/logger.js';
+import { validateMessage, sanitizeMessage } from '../utils/helpers.js';
+import config from '../../config/config.js';
 
-class SocketController {
+export default class SocketController {
     constructor(userService, messageService) {
         this.userService = userService;
         this.messageService = messageService;
@@ -218,5 +218,3 @@ class SocketController {
         }
     }
 }
-
-module.exports = SocketController;

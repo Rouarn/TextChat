@@ -1,5 +1,5 @@
-// 开发环境配置
-module.exports = {
+// 开发环境配置（ESM）
+export default {
   server: {
     port: process.env.PORT || 3000,
     trustProxy: false,

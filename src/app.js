@@ -1,20 +1,21 @@
-const express = require("express");
-const http = require("http");
-const socketIo = require("socket.io");
-const path = require("path");
+import express, { Router } from "express";
+import http from "node:http";
+import { Server as SocketIOServer } from "socket.io";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
-// 导入配置和服务
-const config = require("../config/config");
-const Logger = require("./services/logger");
-const UserService = require("./services/userService");
-const MessageService = require("./services/messageService");
-const SocketController = require("./controllers/socketController");
-const apiRoutes = require("./routes/api");
+// 导入配置和服务（ESM）
+import config from "../config/config.js";
+import Logger from "./services/logger.js";
+import UserService from "./services/userService.js";
+import MessageService from "./services/messageService.js";
+import SocketController from "./controllers/socketController.js";
+import apiRoutes from "./routes/api.js";
 
 // 创建Express应用
 const app = express();
 const server = http.createServer(app);
-const io = socketIo(server, {
+const io = new SocketIOServer(server, {
   cors: config.cors,
 });
 
@@ -26,6 +27,10 @@ const socketController = new SocketController(userService, messageService);
 // 将服务实例存储到app.locals中，供路由使用
 app.locals.userService = userService;
 app.locals.messageService = messageService;
+
+// 兼容ESM的__dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // 静态文件服务 - public目录作为根目录
 app.use(express.static(path.join(__dirname, "../public")));
@@ -58,7 +63,7 @@ setInterval(() => {
 }, 1000);
 
 // 启动服务器
-function startServer() {
+export function startServer() {
   server.listen(config.server.port, () => {
     Logger.info(`聊天服务器启动成功`, {
       port: config.server.port,
@@ -100,4 +105,4 @@ function gracefulShutdown(signal) {
 process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
 process.on("SIGINT", () => gracefulShutdown("SIGINT"));
 
-module.exports = { app, server, io, startServer };
+export { app, server, io };

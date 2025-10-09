@@ -1,21 +1,21 @@
-const config = require('../../config/config');
+import config from '../../config/config.js';
 
 // 消息处理工具
-function sanitizeMessage(text) {
+export function sanitizeMessage(text) {
     if (typeof text !== 'string') return '';
     return text.trim().substring(0, config.chat.maxMessageLength);
 }
 
-function sanitizeUsername(name) {
+export function sanitizeUsername(name) {
     if (typeof name !== 'string') return '匿名用户';
     return name.trim().substring(0, config.chat.maxUsernameLength) || '匿名用户';
 }
 
-function generateUserId() {
+export function generateUserId() {
     return Math.random().toString(36).substring(2) + Date.now().toString(36);
 }
 
-function validateMessage(message) {
+export function validateMessage(message) {
     if (!message || typeof message !== 'object') {
         return { valid: false, error: '无效的消息格式' };
     }
@@ -30,10 +30,3 @@ function validateMessage(message) {
     
     return { valid: true };
 }
-
-module.exports = {
-    sanitizeMessage,
-    sanitizeUsername,
-    generateUserId,
-    validateMessage
-};

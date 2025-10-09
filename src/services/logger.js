@@ -1,8 +1,8 @@
-const fs = require('fs');
-const path = require('path');
-const config = require('../../config/config');
+import fs from 'node:fs';
+import path from 'node:path';
+import config from '../../config/config.js';
 
-class Logger {
+export default class Logger {
     static log(level, message, data = null) {
         const timestamp = new Date().toISOString();
         const logEntry = {
@@ -46,5 +46,3 @@ class Logger {
         });
     }
 }
-
-module.exports = Logger;

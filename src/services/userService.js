@@ -1,7 +1,7 @@
-const Logger = require('./logger');
-const { sanitizeUsername } = require('../utils/helpers');
+import Logger from './logger.js';
+import { sanitizeUsername } from '../utils/helpers.js';
 
-class UserService {
+export default class UserService {
     constructor() {
         this.users = new Map();
         this.typingUsers = new Map();
@@ -100,5 +100,3 @@ class UserService {
         }
     }
 }
-
-module.exports = UserService;

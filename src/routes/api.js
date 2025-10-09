@@ -1,4 +1,4 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
 
 // 健康检查端点
@@ -26,4 +26,4 @@ router.get('/stats', (req, res) => {
     });
 });
 
-module.exports = router;
+export default router;

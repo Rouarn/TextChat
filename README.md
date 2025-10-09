@@ -2,6 +2,8 @@
 
 一个基于 Node.js、Express 和 Socket.IO 的现代化实时聊天应用。
 
+现已全面升级为 ESM（ECMAScript Modules）模块格式，脚本跨平台兼容。
+
 ## 功能特性
 
 - 🚀 实时消息传输
@@ -18,22 +20,22 @@
 
 ```
 real-time-text-chat/
-├── config/                 # 配置文件
-│   ├── config.js           # 主配置文件
-│   ├── development.js      # 开发环境配置
-│   └── production.js       # 生产环境配置
-├── src/                    # 源代码
+├── config/                 # 配置（ESM）
+│   ├── config.js           # 主配置合并
+│   ├── development.js      # 开发环境配置（默认导出）
+│   └── production.js       # 生产环境配置（默认导出）
+├── src/                    # 后端源代码（ESM）
 │   ├── controllers/        # 控制器
 │   │   └── socketController.js
-│   ├── routes/            # 路由
+│   ├── routes/            # 路由（默认导出）
 │   │   └── api.js
-│   ├── services/          # 服务层
+│   ├── services/          # 服务层（默认导出）
 │   │   ├── logger.js
 │   │   ├── messageService.js
 │   │   └── userService.js
-│   ├── utils/             # 工具函数
+│   ├── utils/             # 工具函数（命名导出）
 │   │   └── helpers.js
-│   └── app.js             # 主应用文件
+│   └── app.js             # 主应用（导出startServer）
 ├── public/                # 静态资源
 │   ├── css/
 │   │   └── style.css      # 样式文件
@@ -41,10 +43,8 @@ real-time-text-chat/
 │       └── app.js         # 客户端脚本
 ├── logs/                  # 日志文件
 ├── .env.example           # 环境变量示例
-├── index-new.html         # 新版主页面
-├── server-new.js          # 新版服务器入口
-├── server.js              # 原版服务器（保留）
-├── index.html             # 原版页面（保留）
+├── server.js              # 服务器入口（ESM，调用startServer）
+├── index.html             # 客户端页面
 └── package.json
 ```
 
@@ -53,15 +53,13 @@ real-time-text-chat/
 ### 1. 安装依赖
 
 ```bash
-npm install
+pnpm install
 ```
 
 ### 2. 配置环境变量
 
 ```bash
-npm run setup
-# 或手动复制
-cp .env.example .env
+pnpm run setup
 ```
 
 编辑 `.env` 文件设置您的配置。
@@ -70,18 +68,15 @@ cp .env.example .env
 
 #### 开发模式
 ```bash
-npm run dev
+pnpm run dev
 ```
 
 #### 生产模式
 ```bash
-npm run prod
+pnpm run prod
 ```
 
-#### 使用原版（兼容性）
-```bash
-npm run legacy
-```
+> 提示：项目采用 ESM，所有后端文件使用 `import/export`，无需 CommonJS。
 
 ### 4. 访问应用
 
@@ -108,16 +103,15 @@ npm run legacy
 
 ## 可用脚本
 
-- `npm start` - 启动生产服务器
-- `npm run dev` - 启动开发服务器
-- `npm run prod` - 启动生产服务器
-- `npm run legacy` - 启动原版服务器
-- `npm run clean` - 清理日志文件
-- `npm run setup` - 设置环境变量
+- `pnpm start` - 启动生产服务器
+- `pnpm run dev` - 启动开发服务器
+- `pnpm run prod` - 启动生产服务器
+- `pnpm run clean` - 清理日志文件（跨平台）
+- `pnpm run setup` - 复制环境变量文件（跨平台）
 
 ## 技术栈
 
-- **后端**: Node.js, Express.js, Socket.IO
+- **后端**: Node.js (ESM), Express.js, Socket.IO
 - **前端**: HTML5, CSS3, JavaScript (ES6+)
 - **实时通信**: WebSocket (Socket.IO)
 - **样式**: 响应式设计, CSS Grid/Flexbox
@@ -157,11 +151,10 @@ MIT License
 ## 更新日志
 
 ### v2.0.0
-- 重构项目结构
-- 模块化代码组织
-- 环境配置支持
-- 改进的错误处理
-- 优化移动端体验
+- 转为 ESM 模块格式
+- 优化项目结构与配置加载
+- 脚本跨平台（Windows/macOS/Linux）
+- 保持原有功能与接口一致
 
 ### v1.0.0
 - 基础聊天功能

@@ -1,7 +1,7 @@
-const Logger = require('./logger');
-const config = require('../../config/config');
+import Logger from './logger.js';
+import config from '../../config/config.js';
 
-class MessageService {
+export default class MessageService {
     constructor() {
         this.messages = [];
     }
@@ -39,5 +39,3 @@ class MessageService {
         Logger.info(`已清空所有消息，共${messageCount}条`);
     }
 }
-
-module.exports = MessageService;
