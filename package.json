@@ -7,9 +7,7 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "cross-env NODE_ENV=development node src/server.js",
-    "prod": "cross-env NODE_ENV=production node src/server.js",
-    "build": "node scripts/build.mjs",
-    "start:dist": "cross-env NODE_ENV=production node dist/server.cjs"
+    "prod": "cross-env NODE_ENV=production node src/server.js"
   },
   "dependencies": {
     "compression": "^1.8.1",
