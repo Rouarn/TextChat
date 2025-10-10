@@ -15,9 +15,7 @@
     "socket.io": "^4.7.2"
   },
   "devDependencies": {
-    "cross-env": "^7.0.3",
-    "csso": "^5.0.5",
-    "esbuild": "^0.21.5"
+    "cross-env": "^7.0.3"
   },
   "keywords": [
     "chat",
