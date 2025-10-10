@@ -2,7 +2,10 @@
 <html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
     <title>实时文本聊天</title>
     <!-- 现代优雅字体 -->
     <link
@@ -136,6 +139,8 @@
       <div class="mobile-overlay" id="mobileOverlay"></div>
     </div>
 
+    <!-- 引入由服务器提供的 Socket.IO 客户端（提供全局 io） -->
+    <script src="./socket.io/socket.io.js"></script>
     <!-- 使用 ESModule 方式引入前端脚本（已通过构建打包） -->
     <script type="module" src="/js/socketClient.js"></script>
     <script type="module" src="/js/app.js"></script>

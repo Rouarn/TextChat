@@ -1,7 +1,9 @@
-// 前端 Socket 模块：通过 ES 模块引入 socket.io-client 并暴露全局封装
-import { io } from "socket.io-client";
+// 前端 Socket 模块：使用服务器提供的全局 io，无需模块导入
+// 服务器会在 /socket.io/socket.io.js 暴露全局 io()
+// 该文件仅封装并暴露到 window 供 app.js 使用
 
-const socket = io();
+const socket =
+  typeof window !== "undefined" && window.io ? window.io() : undefined;
 
 function emit(event, payload = {}) {
   try {

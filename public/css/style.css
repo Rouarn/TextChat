@@ -333,7 +333,7 @@ body {
   border-radius: 25px;
   outline: none;
   resize: none;
-  min-height: 20px;
+  min-height: 48px;
   max-height: 100px;
   font-family: inherit;
   transition: border-color 0.3s;
