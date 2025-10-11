@@ -21,9 +21,7 @@
 ```
 real-time-text-chat/
 ├── config/
-│   ├── config.js
-│   ├── development.js
-│   └── production.js
+│   └── config.js
 ├── src/
 │   ├── app.js              # 主应用（导出 startServer）
 │   ├── server.js           # 服务器入口（ESM，调用 startServer）
@@ -50,7 +48,6 @@ real-time-text-chat/
 │   └── js/
 │       ├── app.js
 │       └── socketClient.js
-├── .env.example
 ├── package.json
 ├── pnpm-lock.yaml
 └── README.md
@@ -86,27 +83,12 @@ npm run prod
 pnpm run prod
 ```
 
-访问应用：打开浏览器访问 `http://localhost:3000`（可通过环境变量 `PORT` 修改端口）。
+访问应用：打开浏览器访问 `http://localhost:3000`（端口由 `config/config.js` 的 `server.port` 指定）。
 
-## 环境配置
+## 配置说明
 
-项目不内置 `.env` 加载，请通过系统环境或命令行设置变量。`config/config.js` 会合并环境特定配置。
-
-可用环境变量：
-
-| 变量名 | 描述 | 默认值 |
-|--------|------|--------|
-| `PORT` | 服务器端口 | `3000` |
-| `NODE_ENV` | 运行环境 | `development` |
-| `MAX_MESSAGES` | 最大消息数量 | `100` |
-| `MAX_MESSAGE_LENGTH` | 最大消息长度 | `500` |
-| `MAX_USERNAME_LENGTH` | 最大用户名长度 | `20` |
-| `LOG_LEVEL` | 日志级别 | `info` |
-| `LOG_TO_FILE` | 是否记录到文件 | `false` |
-
-环境特定：
-- 开发环境（`development.js`）启用详细日志、较小消息缓存
-- 生产环境（`production.js`）优化性能、支持代理
+项目仅使用 `config/config.js` 的静态配置，不区分 development/production，也不读取任何环境变量。
+如需调整端口、日志级别、CORS、聊天参数等，请直接编辑 `config/config.js`。
 
 ## 可用脚本
 
@@ -120,7 +102,7 @@ pnpm run prod
 - `pnpm run dev` - 启动开发服务器
 - `pnpm run prod` - 启动生产服务器
 
-> 注：当前项目未提供 `setup` 或 `clean` 脚本，`.env.example` 仅作参考。
+> 注：当前项目未提供 `setup` 或 `clean` 脚本。
 
 ## 技术栈
 

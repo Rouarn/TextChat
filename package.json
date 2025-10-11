@@ -5,9 +5,7 @@
   "type": "module",
   "main": "src/app.js",
   "scripts": {
-    "start": "node src/server.js",
-    "dev": "cross-env NODE_ENV=development node src/server.js",
-    "prod": "cross-env NODE_ENV=production node src/server.js"
+    "start": "node src/server.js"
   },
   "dependencies": {
     "compression": "^1.8.1",
@@ -15,7 +13,6 @@
     "socket.io": "^4.7.2"
   },
   "devDependencies": {
-    "cross-env": "^7.0.3"
   },
   "keywords": [
     "chat",

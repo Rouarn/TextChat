@@ -44,11 +44,8 @@ const resolvedFilename = isCJS ? __filename : fileURLToPath(import.meta.url);
 const resolvedDirname = isCJS ? __dirname : path.dirname(resolvedFilename);
 
 // 静态文件服务 - 启用缓存/ETag/不可变资源提示
-// 生产环境下使用打包输出的 dist 目录（打包后 server.js 位于 dist/，此处使用当前目录）
-// 开发环境使用 public 目录
-const staticRoot = (process.env.NODE_ENV === 'production')
-  ? path.join(resolvedDirname, ".")
-  : path.join(resolvedDirname, "../public");
+// 固定使用 public 目录（不区分环境）
+const staticRoot = path.join(resolvedDirname, "../public");
 app.use(express.static(staticRoot, {
   maxAge: '7d',
   etag: true,
@@ -92,7 +89,6 @@ export function startServer() {
   server.listen(config.server.port, () => {
     Logger.info(`聊天服务器启动成功`, {
       port: config.server.port,
-      environment: config.server.environment,
       pid: process.pid,
     });
 
