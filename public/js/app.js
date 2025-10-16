@@ -634,7 +634,7 @@ function showNotification(message) {
     try {
       new Notification(`${message.username} 发来消息`, {
         body: message.text,
-        icon: "/favicon.ico",
+        icon: "/assets/favicon.png",
         tag: "chat-message",
       });
     } catch (e) {}
