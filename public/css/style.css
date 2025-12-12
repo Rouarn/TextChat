@@ -588,6 +588,18 @@ body {
   border-color: var(--accent-600);
   color: #fff;
 }
+.notification-toggle {
+  background: #f0f0f0;
+  color: #333;
+}
+.notification-toggle:active {
+  background: #e0e0e0;
+}
+.notification-toggle.active {
+  background: var(--accent-gradient);
+  border-color: var(--accent-600);
+  color: #fff;
+}
 
 /* 遮罩层 */
 .mobile-overlay {

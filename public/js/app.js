@@ -13,6 +13,7 @@ let currentUser = {
 };
 let onlineUsers = new Map();
 let soundEnabled = true;
+let notificationsEnabled = true;
 let typingTimeout = null;
 let isTyping = false;
 let lastTypingEmit = 0;
@@ -74,6 +75,7 @@ const elements = {
   emojiGrid: document.getElementById("emojiGrid"),
   usersList: document.getElementById("usersList"),
   soundToggle: document.getElementById("soundToggle"),
+  notificationToggle: document.getElementById("notificationToggle"),
   clearBtn: document.getElementById("clearBtn"),
   mobileNavBtn: document.getElementById("mobileNavBtn"),
   sidebar: document.getElementById("sidebar"),
@@ -262,6 +264,9 @@ function setupEventListeners() {
   elements.sendBtn.addEventListener("click", sendMessage);
   elements.emojiBtn.addEventListener("click", toggleEmojiPicker);
   elements.soundToggle.addEventListener("click", toggleSound);
+  if (elements.notificationToggle) {
+    elements.notificationToggle.addEventListener("click", toggleNotifications);
+  }
   elements.clearBtn.addEventListener("click", clearMessages);
 
   // 移动端优化：防止双击缩放
@@ -307,7 +312,6 @@ function setupEventListeners() {
 function handleConnect() {
   updateConnectionStatus(true);
   currentUser.id = socket.id;
-  requestNotificationPermission();
 }
 
 function handleDisconnect() {
@@ -567,6 +571,34 @@ function toggleSound() {
   saveUserSettings();
 }
 
+// 切换显示通知
+function toggleNotifications() {
+  notificationsEnabled = !notificationsEnabled;
+  const btn = elements.notificationToggle;
+  if (btn) {
+    btn.classList.toggle("active", notificationsEnabled);
+    const icon = btn.querySelector("i");
+    if (icon) {
+      icon.className = notificationsEnabled
+        ? "fas fa-bell"
+        : "fas fa-bell-slash";
+    }
+  }
+  // 仅在用户开启时请求权限（需要用户交互）
+  if (notificationsEnabled && "Notification" in window) {
+    requestNotificationPermission();
+  }
+  // 若被拒绝，给出简单提示
+  if (
+    notificationsEnabled &&
+    "Notification" in window &&
+    Notification.permission === "denied"
+  ) {
+    alert("浏览器已阻止通知，请在浏览器设置中手动开启站点通知权限。");
+  }
+  saveUserSettings();
+}
+
 // 清空消息
 function clearMessages() {
   if (confirm("确定要清空所有聊天记录吗？")) {
@@ -627,13 +659,19 @@ function playNotificationSound() {
 // 请求通知权限
 function requestNotificationPermission() {
   if ("Notification" in window && Notification.permission === "default") {
-    Notification.requestPermission();
+    try {
+      Notification.requestPermission();
+    } catch (e) {}
   }
 }
 
 // 显示通知
 function showNotification(message) {
-  if ("Notification" in window && Notification.permission === "granted") {
+  if (
+    notificationsEnabled &&
+    "Notification" in window &&
+    Notification.permission === "granted"
+  ) {
     try {
       new Notification(`${message.username} 发来消息`, {
         body: message.text,
@@ -651,6 +689,7 @@ function saveUserSettings() {
       name: currentUser.name,
       avatar: currentUser.avatar,
       soundEnabled: soundEnabled,
+      notificationsEnabled: notificationsEnabled,
       userId: currentUser.id,
       lastLoginTime: new Date().toISOString(),
       // 保持当前会话ID，不要在每次保存时重新生成
@@ -688,6 +727,23 @@ function loadUserSettings() {
       elements.soundToggle.classList.toggle("active", soundEnabled);
       const icon = elements.soundToggle.querySelector("i");
       icon.className = soundEnabled ? "fas fa-volume-up" : "fas fa-volume-mute";
+    }
+    // 加载通知设置
+    if (typeof settings.notificationsEnabled === "boolean") {
+      notificationsEnabled = settings.notificationsEnabled;
+    }
+    if (elements.notificationToggle) {
+      elements.notificationToggle.classList.toggle(
+        "active",
+        notificationsEnabled
+      );
+      const nIcon = elements.notificationToggle.querySelector("i");
+      if (nIcon) {
+        nIcon.className = notificationsEnabled
+          ? "fas fa-bell"
+          : "fas fa-bell-slash";
+      }
+      requestNotificationPermission();
     }
 
     // 设置持久化用户ID用于消息归属判断
