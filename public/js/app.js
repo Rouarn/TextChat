@@ -16,6 +16,7 @@ let soundEnabled = true;
 let typingTimeout = null;
 let isTyping = false;
 let lastTypingEmit = 0;
+let notificationAudio = null;
 
 // 前端交互：统一 Socket 发送封装与打字节流控制
 const TYPING_EMIT_INTERVAL = 800; // 最短间隔，避免频繁发送
@@ -612,11 +613,13 @@ function scrollToBottom(options = {}) {
 function playNotificationSound() {
   if (soundEnabled) {
     try {
-      const audio = new Audio(
-        "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT"
-      );
-      audio.volume = 0.3;
-      audio.play().catch(() => {});
+      if (!notificationAudio) {
+        notificationAudio = new Audio("/assets/messagePromptTone.mp3");
+        notificationAudio.preload = "auto";
+        notificationAudio.volume = 0.3;
+      }
+      notificationAudio.currentTime = 0;
+      notificationAudio.play().catch(() => {});
     } catch (e) {}
   }
 }
