@@ -296,6 +296,7 @@ body {
 }
 .message-bubble.own .message-header {
   align-self: flex-end;
+  justify-content: flex-end;
 }
 .message-bubble.other .message-header {
   align-self: flex-start;
@@ -337,6 +338,7 @@ body {
   background: var(--accent-gradient);
   color: #fff;
   box-shadow: inset -3px 0 0 rgba(16, 185, 129, 0.35);
+  text-align: justify;
 }
 .message-content::before {
   content: "";
