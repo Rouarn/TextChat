@@ -207,6 +207,7 @@ function init() {
   setupEventListeners();
   generateEmojiPicker();
   loadUserSettings();
+  initializeNotificationAudio();
   setupMobileNavigation();
   handleResize();
 }
@@ -654,6 +655,73 @@ function playNotificationSound() {
       notificationAudio.play().catch(() => {});
     } catch (e) {}
   }
+}
+
+function initializeNotificationAudio() {
+  try {
+    if (!notificationAudio) {
+      notificationAudio = new Audio("/assets/messagePromptTone.mp3");
+      notificationAudio.preload = "auto";
+      notificationAudio.volume = 0.3;
+      try {
+        notificationAudio.load();
+      } catch (e) {}
+    }
+    if (!soundEnabled) {
+      return;
+    }
+    try {
+      notificationAudio.muted = true;
+      const p = notificationAudio.play();
+      if (p && typeof p.then === "function") {
+        p
+          .then(() => {
+            try {
+              notificationAudio.pause();
+            } catch (e) {}
+            notificationAudio.muted = false;
+            notificationAudio.currentTime = 0;
+          })
+          .catch(() => {
+            attachAudioUnlock();
+          });
+      } else {
+        attachAudioUnlock();
+      }
+    } catch (e) {
+      attachAudioUnlock();
+    }
+  } catch (e) {}
+}
+
+function attachAudioUnlock() {
+  const unlock = () => {
+    try {
+      if (!notificationAudio) {
+        notificationAudio = new Audio("/assets/messagePromptTone.mp3");
+        notificationAudio.preload = "auto";
+        notificationAudio.volume = 0.3;
+      }
+      notificationAudio.muted = true;
+      const p = notificationAudio.play();
+      if (p && typeof p.then === "function") {
+        p
+          .then(() => {
+            try {
+              notificationAudio.pause();
+            } catch (e) {}
+            notificationAudio.muted = false;
+            notificationAudio.currentTime = 0;
+          })
+          .catch(() => {});
+      }
+    } catch (e) {}
+  };
+  try {
+    document.addEventListener("click", unlock, { once: true });
+    document.addEventListener("touchstart", unlock, { once: true });
+    document.addEventListener("keydown", unlock, { once: true });
+  } catch (e) {}
 }
 
 // 请求通知权限
