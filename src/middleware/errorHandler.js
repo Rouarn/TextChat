@@ -1,4 +1,9 @@
 // 全局错误处理中间件（ESM）
+/**
+ * 统一错误响应：
+ * - 生产环境隐藏堆栈信息
+ * - 开发环境根据配置输出详情
+ */
 import { fail } from '../utils/response.js';
 import config from '../../config/config.js';
 

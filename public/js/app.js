@@ -1,4 +1,15 @@
 // 实时文本聊天系统 - 客户端应用
+/**
+ * 客户端功能概述：
+ * - 管理用户/消息状态，并与服务端进行 Socket 通信
+ * - 渲染聊天 UI、处理桌面通知与提示音
+ * - 移动端适配（视口高度、抽屉导航、滚动策略等）
+ *
+ * 事件约定：
+ * - message:send / message:new / message:history / message:clear
+ * - typing:start / typing:stop
+ * - user:update / user:joined / user:left / users:update
+ */
 
 // 全局变量
 const socket =
@@ -20,9 +31,128 @@ let lastTypingEmit = 0;
 let notificationAudio = null;
 
 // 前端交互：统一 Socket 发送封装与打字节流控制
+/** 打字指示最短发送间隔（毫秒），用于节流 */
 const TYPING_EMIT_INTERVAL = 800; // 最短间隔，避免频繁发送
+/** 打字停止延迟（毫秒），保证可靠地发送 stop 事件 */
 const TYPING_STOP_DELAY = 1200; // 停止延迟，保证可靠 stop
 
+/** 提示音资源路径与默认音量、智能滚动阈值（像素） */
+const AUDIO_PATH = "/assets/messagePromptTone.mp3";
+const AUDIO_VOLUME = 0.3;
+const SCROLL_NEAR_THRESHOLD = 80;
+
+/**
+ * 返回当前用户的唯一标识
+ * 优先使用 currentUser.id，未分配时回退到 socket.id
+ */
+function getUserId() {
+  return currentUser.id || socket.id;
+}
+
+/**
+ * 更新按钮激活状态与图标
+ * @param {HTMLElement} btn
+ * @param {boolean} active
+ * @param {string} activeIcon
+ * @param {string} inactiveIcon
+ */
+function updateToggleButton(btn, active, activeIcon, inactiveIcon) {
+  if (!btn) return;
+  btn.classList.toggle("active", active);
+  const icon = btn.querySelector("i");
+  if (icon) {
+    icon.className = active ? activeIcon : inactiveIcon;
+  }
+}
+
+/**
+ * 确保通知音频为单例并已加载
+ * @returns {HTMLAudioElement}
+ */
+function ensureNotificationAudio() {
+  if (!notificationAudio) {
+    notificationAudio = new Audio(AUDIO_PATH);
+    notificationAudio.preload = "auto";
+    notificationAudio.volume = AUDIO_VOLUME;
+    try {
+      notificationAudio.load();
+    } catch (e) {}
+  }
+  return notificationAudio;
+}
+
+/**
+ * 以静音方式尝试预播放以解锁浏览器自动播放限制
+ * 成功后暂停并恢复为可正常播放状态
+ * @returns {Promise<void>}
+ */
+function tryPreplayAudioMuted() {
+  const audio = ensureNotificationAudio();
+  try {
+    audio.muted = true;
+    const p = audio.play();
+    if (p && typeof p.then === "function") {
+      return p
+        .then(() => {
+          try {
+            audio.pause();
+          } catch (e) {}
+          audio.muted = false;
+          audio.currentTime = 0;
+        })
+        .catch(() => Promise.reject());
+    }
+  } catch (e) {}
+  return Promise.reject();
+}
+
+/** 注册一次性交互事件用于解锁音频自动播放（click/touchstart/keydown） */
+function registerAudioUnlockEvents() {
+  const unlock = () => {
+    tryPreplayAudioMuted().catch(() => {});
+  };
+  try {
+    document.addEventListener("click", unlock, { once: true });
+    document.addEventListener("touchstart", unlock, { once: true });
+    document.addEventListener("keydown", unlock, { once: true });
+  } catch (e) {}
+}
+
+/** 向服务端同步当前用户信息（统一封装） */
+function emitUserUpdate() {
+  const userToUpdate = {
+    ...currentUser,
+    id: getUserId(),
+  };
+  emitSocket("user:update", userToUpdate);
+}
+
+/**
+ * 判断消息归属：优先使用服务器标记，其次比较 persistentUserId / sessionId / userId
+ * @param {Object} message
+ * @param {boolean|null} fromSelf
+ * @returns {boolean}
+ */
+function isMessageFromCurrentUser(message, fromSelf) {
+  if (fromSelf !== null) return fromSelf;
+  return Boolean(
+    (message.persistentUserId &&
+      message.persistentUserId === currentUser.persistentUserId) ||
+      (message.sessionId && message.sessionId === currentUser.sessionId) ||
+      (message.userId && currentUser.id && message.userId === currentUser.id)
+  );
+}
+
+/** 关闭表情选择器的统一方法 */
+function closeEmojiPicker() {
+  elements.emojiPicker.style.display = "none";
+}
+
+/**
+ * 安全发射 Socket 事件
+ * @param {string} event
+ * @param {Object} [payload]
+ */
 function emitSocket(event, payload = {}) {
   try {
     socket.emit(event, payload);
@@ -31,13 +161,14 @@ function emitSocket(event, payload = {}) {
   }
 }
 
+/** 开始打字指示（节流 + 定时停止） */
 function startTyping() {
   const now = Date.now();
   if (!isTyping || now - lastTypingEmit > TYPING_EMIT_INTERVAL) {
     isTyping = true;
     lastTypingEmit = now;
     emitSocket("typing:start", {
-      userId: currentUser.id || socket.id,
+      userId: getUserId(),
       username: currentUser.name,
     });
   }
@@ -45,16 +176,17 @@ function startTyping() {
   typingTimeout = setTimeout(() => {
     if (isTyping) {
       isTyping = false;
-      emitSocket("typing:stop", { userId: currentUser.id || socket.id });
+      emitSocket("typing:stop", { userId: getUserId() });
     }
   }, TYPING_STOP_DELAY);
 }
 
+/** 停止打字指示并发射 stop 事件（如有必要） */
 function stopTyping() {
   clearTimeout(typingTimeout);
   if (isTyping) {
     isTyping = false;
-    emitSocket("typing:stop", { userId: currentUser.id || socket.id });
+    emitSocket("typing:stop", { userId: getUserId() });
   }
 }
 
@@ -198,11 +330,13 @@ const emojis = [
 ];
 
 // 移动端检测
+/** 判断是否为移动端视口（≤768px） */
 function isMobile() {
   return window.innerWidth <= 768;
 }
 
 // 初始化
+/** 页面初始化：事件、组件、设置、音频、导航与尺寸处理 */
 function init() {
   setupEventListeners();
   generateEmojiPicker();
@@ -243,6 +377,11 @@ function handleResize() {
 }
 
 // 设置事件监听器
+/**
+ * 绑定所有 Socket 与 UI 事件：
+ * - Socket：连接/断开/历史/新消息/上下线/打字/用户列表
+ * - UI：昵称、消息输入与发送、表情、声音、通知、清空、移动端优化
+ */
 function setupEventListeners() {
   // Socket 事件
   const on =
@@ -319,6 +458,7 @@ function handleDisconnect() {
   updateConnectionStatus(false);
 }
 
+/** 渲染历史消息并在加载完成后强制滚动到底部 */
 function handleMessageHistory(history) {
   elements.messagesContainer.innerHTML = "";
   history.forEach(message => {
@@ -328,6 +468,7 @@ function handleMessageHistory(history) {
   scrollToBottom({ force: true });
 }
 
+/** 渲染新消息；非本人消息播放通知与提示音；智能滚动到底部 */
 function handleNewMessage(data) {
   displayMessage(data.message, !data.fromSelf, data.fromSelf);
   if (!data.fromSelf) {
@@ -378,13 +519,7 @@ function handleUsernameChange() {
     currentUser.avatar = username.charAt(0).toUpperCase();
     elements.userAvatar.textContent = currentUser.avatar;
 
-    // 确保用户ID正确设置
-    const userToUpdate = {
-      ...currentUser,
-      id: currentUser.id || socket.id,
-    };
-
-    emitSocket("user:update", userToUpdate);
+    emitUserUpdate();
     saveUserSettings();
   }
 }
@@ -414,6 +549,7 @@ function handleMessageKeyPress(e) {
 }
 
 // 发送消息
+/** 构造消息并发送；重置输入框；停止打字；在移动端收起表情选择器 */
 function sendMessage() {
   const raw = elements.messageInput.value || "";
   const message = raw.trim();
@@ -427,7 +563,7 @@ function sendMessage() {
       username: currentUser.name,
       avatar: currentUser.avatar,
       timestamp: new Date().toISOString(),
-      userId: currentUser.id || socket.id,
+      userId: getUserId(),
       sessionId: currentUser.sessionId,
       persistentUserId: currentUser.persistentUserId,
     };
@@ -442,31 +578,22 @@ function sendMessage() {
 
     // 移动端关闭表情选择器
     if (isMobile()) {
-      elements.emojiPicker.style.display = "none";
+      closeEmojiPicker();
     }
   }
 }
 
 // 显示消息
+/**
+ * 渲染消息气泡；根据归属切换布局（头像左右、信息顺序）
+ * @param {Object} message
+ * @param {boolean} [playSound]
+ * @param {boolean|null} [fromSelf]
+ */
 function displayMessage(message, playSound = false, fromSelf = null) {
   const messageDiv = document.createElement("div");
   // 判断是否为自己的消息
-  let isOwnMessage;
-  if (fromSelf !== null) {
-    // 新消息使用服务器提供的fromSelf标记
-    isOwnMessage = fromSelf;
-  } else {
-    // 历史消息：仅根据更稳定的标识判断归属，避免同名误判
-    // 1) 持久化用户ID（跨会话保持一致）
-    // 2) 会话ID（同一次页面会话）
-    // 3) 用户ID（仅在当前客户端已明确设置时比较）
-    isOwnMessage = Boolean(
-      (message.persistentUserId &&
-        message.persistentUserId === currentUser.persistentUserId) ||
-        (message.sessionId && message.sessionId === currentUser.sessionId) ||
-        (message.userId && currentUser.id && message.userId === currentUser.id)
-    );
-  }
+  const isOwnMessage = isMessageFromCurrentUser(message, fromSelf);
 
   messageDiv.className = `message-bubble ${isOwnMessage ? "own" : "other"}`;
 
@@ -549,7 +676,7 @@ function generateEmojiPicker() {
     emojiDiv.addEventListener("click", () => {
       elements.messageInput.value += emoji;
       elements.messageInput.focus();
-      elements.emojiPicker.style.display = "none";
+      closeEmojiPicker();
       handleMessageInputChange();
     });
     elements.emojiGrid.appendChild(emojiDiv);
@@ -566,25 +693,24 @@ function toggleEmojiPicker(e) {
 // 切换声音
 function toggleSound() {
   soundEnabled = !soundEnabled;
-  elements.soundToggle.classList.toggle("active", soundEnabled);
-  const icon = elements.soundToggle.querySelector("i");
-  icon.className = soundEnabled ? "fas fa-volume-up" : "fas fa-volume-mute";
+  updateToggleButton(
+    elements.soundToggle,
+    soundEnabled,
+    "fas fa-volume-up",
+    "fas fa-volume-mute"
+  );
   saveUserSettings();
 }
 
 // 切换显示通知
 function toggleNotifications() {
   notificationsEnabled = !notificationsEnabled;
-  const btn = elements.notificationToggle;
-  if (btn) {
-    btn.classList.toggle("active", notificationsEnabled);
-    const icon = btn.querySelector("i");
-    if (icon) {
-      icon.className = notificationsEnabled
-        ? "fas fa-bell"
-        : "fas fa-bell-slash";
-    }
-  }
+  updateToggleButton(
+    elements.notificationToggle,
+    notificationsEnabled,
+    "fas fa-bell",
+    "fas fa-bell-slash"
+  );
   // 仅在用户开启时请求权限（需要用户交互）
   if (notificationsEnabled && "Notification" in window) {
     requestNotificationPermission();
@@ -610,6 +736,10 @@ function clearMessages() {
 
 // 智能滚动到底部（合并请求 + 接近底部判断）
 let scrollQueued = false;
+/**
+ * 智能滚动：仅在接近底部或明确要求时滚动，并合并短时间内请求
+ * @param {{force?:boolean}} options
+ */
 function scrollToBottom(options = {}) {
   const { force = false } = options;
   const el = elements.messagesContainer;
@@ -617,8 +747,7 @@ function scrollToBottom(options = {}) {
 
   // 若用户不在底部附近且非强制，则不滚动，避免“狂滚动”
   const distance = el.scrollHeight - el.scrollTop - el.clientHeight;
-  const NEAR_THRESHOLD = 80; // 距离底部小于该阈值时视为“靠近底部”
-  if (!force && distance > NEAR_THRESHOLD) {
+  if (!force && distance > SCROLL_NEAR_THRESHOLD) {
     return;
   }
 
@@ -643,88 +772,40 @@ function scrollToBottom(options = {}) {
 }
 
 // 播放通知声音
+/** 播放提示音（统一管理音频实例与播放状态） */
 function playNotificationSound() {
   if (soundEnabled) {
     try {
-      if (!notificationAudio) {
-        notificationAudio = new Audio("/assets/messagePromptTone.mp3");
-        notificationAudio.preload = "auto";
-        notificationAudio.volume = 0.3;
-      }
+      ensureNotificationAudio();
       notificationAudio.currentTime = 0;
       notificationAudio.play().catch(() => {});
     } catch (e) {}
   }
 }
 
+/**
+ * 初始化通知音频：
+ * - 预创建并加载音频
+ * - 尝试静音预播放以解锁自动播放；失败则注册一次性交互解锁
+ */
 function initializeNotificationAudio() {
   try {
-    if (!notificationAudio) {
-      notificationAudio = new Audio("/assets/messagePromptTone.mp3");
-      notificationAudio.preload = "auto";
-      notificationAudio.volume = 0.3;
-      try {
-        notificationAudio.load();
-      } catch (e) {}
-    }
+    ensureNotificationAudio();
     if (!soundEnabled) {
       return;
     }
     try {
-      notificationAudio.muted = true;
-      const p = notificationAudio.play();
-      if (p && typeof p.then === "function") {
-        p
-          .then(() => {
-            try {
-              notificationAudio.pause();
-            } catch (e) {}
-            notificationAudio.muted = false;
-            notificationAudio.currentTime = 0;
-          })
-          .catch(() => {
-            attachAudioUnlock();
-          });
-      } else {
-        attachAudioUnlock();
-      }
+      tryPreplayAudioMuted().catch(() => {
+        registerAudioUnlockEvents();
+      });
     } catch (e) {
-      attachAudioUnlock();
+      registerAudioUnlockEvents();
     }
   } catch (e) {}
 }
 
-function attachAudioUnlock() {
-  const unlock = () => {
-    try {
-      if (!notificationAudio) {
-        notificationAudio = new Audio("/assets/messagePromptTone.mp3");
-        notificationAudio.preload = "auto";
-        notificationAudio.volume = 0.3;
-      }
-      notificationAudio.muted = true;
-      const p = notificationAudio.play();
-      if (p && typeof p.then === "function") {
-        p
-          .then(() => {
-            try {
-              notificationAudio.pause();
-            } catch (e) {}
-            notificationAudio.muted = false;
-            notificationAudio.currentTime = 0;
-          })
-          .catch(() => {});
-      }
-    } catch (e) {}
-  };
-  try {
-    document.addEventListener("click", unlock, { once: true });
-    document.addEventListener("touchstart", unlock, { once: true });
-    document.addEventListener("keydown", unlock, { once: true });
-  } catch (e) {}
-}
-
 // 请求通知权限
+/** 请求桌面通知权限（仅在权限为 default 时触发） */
 function requestNotificationPermission() {
   if ("Notification" in window && Notification.permission === "default") {
     try {
@@ -734,6 +815,7 @@ function requestNotificationPermission() {
 }
 
 // 显示通知
+/** 根据权限显示桌面通知（含用户名、正文与图标） */
 function showNotification(message) {
   if (
     notificationsEnabled &&
@@ -751,6 +833,7 @@ function showNotification(message) {
 }
 
 // 保存用户设置
+/** 将用户偏好（声音、通知、头像、会话等）存储到 localStorage */
 function saveUserSettings() {
   try {
     const chatUserSettings = {
@@ -771,6 +854,13 @@ function saveUserSettings() {
 }
 
 // 加载用户设置
+/**
+ * 从 localStorage 恢复设置：
+ * - 恢复昵称与头像
+ * - 恢复声音与通知状态（更新按钮样式与图标）
+ * - 初始化 persistentUserId 与 sessionId
+ * - 在连接后同步用户信息到服务端
+ */
 function loadUserSettings() {
   try {
     const settings = JSON.parse(
@@ -801,16 +891,12 @@ function loadUserSettings() {
       notificationsEnabled = settings.notificationsEnabled;
     }
     if (elements.notificationToggle) {
-      elements.notificationToggle.classList.toggle(
-        "active",
-        notificationsEnabled
+      updateToggleButton(
+        elements.notificationToggle,
+        notificationsEnabled,
+        "fas fa-bell",
+        "fas fa-bell-slash"
       );
-      const nIcon = elements.notificationToggle.querySelector("i");
-      if (nIcon) {
-        nIcon.className = notificationsEnabled
-          ? "fas fa-bell"
-          : "fas fa-bell-slash";
-      }
       requestNotificationPermission();
     }
 
@@ -837,12 +923,8 @@ function loadUserSettings() {
       Boolean(currentUser.avatar && currentUser.avatar !== "U");
     if (hasProfile) {
       const emitUpdate = () => {
-        const userToUpdate = {
-          ...currentUser,
-          id: currentUser.id || (socket && socket.id),
-        };
         try {
-          socket.emit("user:update", userToUpdate);
+          emitUserUpdate();
         } catch (e) {
           console.error("同步用户信息失败:", e);
         }
@@ -863,6 +945,7 @@ function loadUserSettings() {
 }
 
 // 生成会话ID
+/** 生成当前页面会话 ID（刷新页面变更） */
 function generateSessionId() {
   return (
     "session_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9)
@@ -870,6 +953,7 @@ function generateSessionId() {
 }
 
 // 生成持久化用户ID
+/** 生成永久用户 ID（用于跨会话消息归属判断） */
 function generatePersistentUserId() {
   // 生成一个永久的用户ID，基于时间戳和随机数
   return (
@@ -881,6 +965,7 @@ function generatePersistentUserId() {
 }
 
 // HTML转义
+/** 安全转义文本为 HTML（防止注入） */
 function escapeHtml(text) {
   const div = document.createElement("div");
   div.textContent = text;
@@ -891,6 +976,7 @@ function escapeHtml(text) {
 document.addEventListener("DOMContentLoaded", init);
 
 // 视口高度变量，适配移动端键盘弹出导致的高度变化
+/** 设置 CSS 变量 --vh 以适配移动端视口变化（含键盘弹出） */
 function setViewportHeightVar() {
   const vh = window.innerHeight * 0.01;
   document.documentElement.style.setProperty("--vh", `${vh}px`);
@@ -900,6 +986,11 @@ window.addEventListener("resize", setViewportHeightVar);
 window.addEventListener("orientationchange", setViewportHeightVar);
 
 // 动态调整移动端消息容器高度，避免超出屏幕或键盘弹出导致上移
+/**
+ * 计算并设置消息容器高度：
+ * - 避免容器超出视口
+ * - 在键盘弹出时保持可用空间并避免页面位移
+ */
 function adjustMessagesHeight() {
   if (!isMobile()) return;
   const vh = window.innerHeight;

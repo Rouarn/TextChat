@@ -1,8 +1,15 @@
 // 简单的令牌桶/滑动窗口速率限制器（ESM）
-// 使用方式：const allow = limiter(key)；返回 true/false
+// 使用方式：
+// const limiter = createRateLimiter({ windowMs: 3000, max: 10 });
+// const allow = limiter(key); // 返回 true/false
 export function createRateLimiter({ windowMs = 3000, max = 10 } = {}) {
   const hits = new Map();
 
+  /**
+   * 对某个 key 进行速率检查
+   * @param {string} key
+   * @returns {boolean} 是否允许
+   */
   return function (key) {
     const now = Date.now();
     let bucket = hits.get(key);

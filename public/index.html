@@ -1,4 +1,15 @@
 <!DOCTYPE html>
+<!--
+  实时文本聊天系统 - 前端页面
+  结构说明：
+  - head：字体与图标、核心样式、favicon
+  - body：头部状态、用户设置、聊天区域、侧栏、表情选择器、移动端遮罩
+  - 脚本：Socket.IO 客户端（提供全局 io）、前端模块 socketClient.js 与 app.js
+  性能与可用性：
+  - 使用 viewport-fit=cover 适配安全区域
+  - 引入现代字体与图标库
+  - 样式文件负责响应式与移动端适配
+-->
 <html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
@@ -63,7 +74,7 @@
         </div>
       </div>
 
-      <!-- 主要内容区域 -->
+      <!-- 主要内容区域：左侧为聊天区域，右侧为在线用户侧栏 -->
       <div class="main-content">
         <!-- 聊天区域 -->
         <div class="chat-area">
@@ -139,7 +150,7 @@
         </div>
       </div>
 
-      <!-- 移动端遮罩层 -->
+      <!-- 移动端遮罩层：与侧栏联动，点击关闭 -->
       <div class="mobile-overlay" id="mobileOverlay"></div>
     </div>
 

@@ -1,4 +1,9 @@
 // DTO 映射工具（ESM）
+/**
+ * 用户对象 → 传输对象（剔除非必要字段）
+ * @param {Object} user
+ * @returns {{id:string,name:string,avatar:string,joinTime:string,lastActivity:string}|null}
+ */
 
 export function toUserDTO(user) {
   if (!user) return null;
@@ -11,6 +16,11 @@ export function toUserDTO(user) {
   };
 }
 
+/**
+ * 消息对象 → 传输对象（保留客户端归属判断字段）
+ * @param {Object} message
+ * @returns {{id:string,text:string,timestamp:string,userId:string,username:string,avatar:string,sessionId:string|null,persistentUserId:string|null}|null}
+ */
 export function toMessageDTO(message) {
   if (!message) return null;
   return {

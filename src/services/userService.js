@@ -1,3 +1,4 @@
+// 用户服务：管理在线用户与打字状态，并提供清理策略
 import Logger from './logger.js';
 import { sanitizeUsername } from '../utils/helpers.js';
 import { toUserDTO } from '../utils/dto.js';
@@ -9,6 +10,11 @@ export default class UserService {
     }
 
     // 用户管理
+    /**
+     * 添加新用户（默认匿名头像与昵称）
+     * @param {string} socketId
+     * @param {{name?:string, avatar?:string}} userInfo
+     */
     addUser(socketId, userInfo = {}) {
         const user = {
             id: socketId,
@@ -24,6 +30,7 @@ export default class UserService {
         return user;
     }
 
+    /** 移除用户并同步打字状态缓存 */
     removeUser(socketId) {
         const user = this.users.get(socketId);
         if (user) {
@@ -35,6 +42,7 @@ export default class UserService {
         return null;
     }
 
+    /** 更新用户昵称与头像，并刷新活动时间 */
     updateUser(socketId, userInfo) {
         const user = this.users.get(socketId);
         if (user) {
@@ -48,19 +56,23 @@ export default class UserService {
         return null;
     }
 
+    /** 获取单个用户 */
     getUser(socketId) {
         return this.users.get(socketId);
     }
 
+    /** 获取所有用户列表 */
     getUsersList() {
         return Array.from(this.users.values());
     }
 
+    /** 在线用户数量 */
     getUsersCount() {
         return this.users.size;
     }
 
     // 打字指示器管理
+    /** 设置用户打字状态（含时间戳） */
     setUserTyping(socketId, username) {
         this.typingUsers.set(socketId, {
             username: sanitizeUsername(username),
@@ -68,15 +80,22 @@ export default class UserService {
         });
     }
 
+    /** 移除用户打字状态 */
     removeUserTyping(socketId) {
         this.typingUsers.delete(socketId);
     }
 
+    /** 获取打字中的用户 Map */
     getTypingUsers() {
         return this.typingUsers;
     }
 
     // 清理不活跃用户
+    /**
+     * 移除超过不活跃阈值的用户并广播列表更新
+     * @param {number} inactiveThreshold
+     * @param {import('socket.io').Server} io
+     */
     cleanupInactiveUsers(inactiveThreshold, io) {
         const now = Date.now();
         
@@ -91,6 +110,11 @@ export default class UserService {
     }
 
     // 清理过期的打字指示器
+    /**
+     * 移除超过时间阈值的打字状态并广播停止事件
+     * @param {number} typingTimeout
+     * @param {import('socket.io').Server} io
+     */
     cleanupTypingIndicators(typingTimeout, io) {
         const now = Date.now();
         for (const [socketId, typingInfo] of this.typingUsers.entries()) {

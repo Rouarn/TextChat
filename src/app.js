@@ -1,3 +1,4 @@
+// 应用主模块：组装 Express、Socket.IO、路由与中间件，并提供启动/关闭能力
 import express from "express";
 import http from "node:http";
 import { Server as SocketIOServer } from "socket.io";
@@ -15,7 +16,7 @@ import apiRoutes from "./routes/api.js";
 import notFound from "./middleware/notFound.js";
 import errorHandler from "./middleware/errorHandler.js";
 
-// 创建Express应用
+// 创建Express应用与 Socket.IO 服务
 const app = express();
 const server = http.createServer(app);
 const io = new SocketIOServer(server, {
@@ -60,7 +61,7 @@ app.use("/api", apiRoutes);
 app.use(notFound);
 app.use(errorHandler);
 
-// Socket.IO连接处理
+// Socket.IO连接处理：交由控制器统一管理事件与逻辑
 io.on("connection", socket => {
   socketController.handleConnection(socket, io);
 });
@@ -84,7 +85,11 @@ setInterval(() => {
   userService.cleanupTypingIndicators(config.chat.typingTimeout, io);
 }, 1000);
 
-// 启动服务器
+/**
+ * 启动服务器
+ * - 监听配置端口
+ * - 输出启动信息与可访问端点
+ */
 export function startServer() {
   server.listen(config.server.port, () => {
     Logger.info(`聊天服务器启动成功`, {
@@ -114,7 +119,12 @@ export function startServer() {
   });
 }
 
-// 优雅关闭
+/**
+ * 优雅关闭：
+ * - 响应终止信号
+ * - 停止接收新连接并在关闭后退出
+ * @param {string} signal
+ */
 function gracefulShutdown(signal) {
   Logger.info(`收到${signal}信号，开始优雅关闭`);
   server.close(() => {

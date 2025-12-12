@@ -1,8 +1,9 @@
+// REST API 路由：提供健康检查与统计数据
 import express from 'express';
 import { ok } from '../utils/response.js';
 const router = express.Router();
 
-// 健康检查端点
+// 健康检查端点：返回时间、运行时长、用户与消息数量
 router.get('/health', (req, res) => {
     const { userService, messageService } = req.app.locals;
     const data = {
@@ -14,7 +15,7 @@ router.get('/health', (req, res) => {
     res.json(ok(data));
 });
 
-// 统计信息端点
+// 统计信息端点：在线用户、总消息数、打字中用户数量、运行时长
 router.get('/stats', (req, res) => {
     const { userService, messageService } = req.app.locals;
     const data = {

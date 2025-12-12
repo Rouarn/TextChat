@@ -1,9 +1,14 @@
+// 轻量日志模块：支持控制台与可选文件输出，按级别过滤
 import fs from 'node:fs';
 import path from 'node:path';
 import config from '../../config/config.js';
 
 const LEVELS = { debug: 10, info: 20, warn: 30, error: 40 };
 
+/**
+ * 判断是否应输出指定级别的日志
+ * @param {'debug'|'info'|'warn'|'error'} level
+ */
 function shouldLog(level) {
   const configuredLevel = (config.logging.logLevel || config.logging.level || 'info').toLowerCase();
   const current = LEVELS[configuredLevel] ?? LEVELS.info;
@@ -11,6 +16,10 @@ function shouldLog(level) {
   return incoming >= current;
 }
 
+/**
+ * 解析日志目录（兼容 logDir 或 filePath）
+ * - 若提供文件路径，则返回其所在目录
+ */
 function getLogDir() {
   // 支持 logDir 或 filePath 两种配置键
   const dirOrFile = config.logging.logDir || config.logging.filePath || 'logs/app.log';
@@ -22,6 +31,12 @@ function getLogDir() {
 }
 
 export default class Logger {
+  /**
+   * 基础日志输出（控制台 + 可选文件）
+   * @param {'debug'|'info'|'warn'|'error'} level
+   * @param {string} message
+   * @param {Object|null} data
+   */
   static log(level, message, data = null) {
     if (!shouldLog(level)) return;
 
@@ -55,6 +70,10 @@ export default class Logger {
     this.log('error', message, data);
   }
 
+  /**
+   * 写入日志到文件（按日期切分）
+   * @param {{timestamp:string, level:string, message:string, data?:Object}} logEntry
+   */
   static writeToFile(logEntry) {
     const logDir = path.join(process.cwd(), getLogDir());
     if (!fs.existsSync(logDir)) {

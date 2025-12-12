@@ -1,9 +1,15 @@
+// Socket 控制器：集中处理所有 Socket.IO 事件与业务逻辑
 import Logger from '../services/logger.js';
 import { validateMessage, sanitizeMessage } from '../utils/helpers.js';
 import { createRateLimiter } from '../utils/rateLimiter.js';
 import { toUserDTO, toMessageDTO } from '../utils/dto.js';
 import config from '../../config/config.js';
 
+/**
+ * SocketController
+ * - 负责用户加入/离开、消息发送、打字指示、列表更新等实时事件
+ * - 提供速率限制、DTO 映射与统一错误日志
+ */
 export default class SocketController {
     constructor(userService, messageService) {
         this.userService = userService;
@@ -15,6 +21,11 @@ export default class SocketController {
         });
     }
 
+    /**
+     * 处理新连接：发送初始数据并绑定事件
+     * @param {import('socket.io').Socket} socket
+     * @param {import('socket.io').Server} io
+     */
     handleConnection(socket, io) {
         Logger.info('新的Socket连接', { socketId: socket.id });
         
@@ -42,6 +53,11 @@ export default class SocketController {
         this.bindEventHandlers(socket, io);
     }
 
+    /**
+     * 绑定该 socket 的所有事件处理器
+     * @param {import('socket.io').Socket} socket
+     * @param {import('socket.io').Server} io
+     */
     bindEventHandlers(socket, io) {
         // 处理用户信息更新
         socket.on('user:update', (userInfo) => {
@@ -78,6 +94,9 @@ export default class SocketController {
         });
     }
 
+    /**
+     * 更新用户信息并广播最新用户列表
+     */
     handleUpdateUser(socket, io, userInfo) {
         try {
             const updatedUser = this.userService.updateUser(socket.id, userInfo);
@@ -91,6 +110,9 @@ export default class SocketController {
         }
     }
 
+    /**
+     * 处理发送消息：速率限制、验证与广播
+     */
     handleSendMessage(socket, io, messageData) {
         try {
             // 速率限制检查
@@ -157,6 +179,7 @@ export default class SocketController {
         }
     }
 
+    /** 处理打字开始事件并广播 */
     handleTyping(socket, io, data) {
         try {
             const user = this.userService.getUser(socket.id);
@@ -172,6 +195,7 @@ export default class SocketController {
         }
     }
 
+    /** 处理打字停止事件并广播 */
     handleStopTyping(socket, io, data) {
         try {
             this.userService.removeUserTyping(socket.id);
@@ -183,6 +207,7 @@ export default class SocketController {
         }
     }
 
+    /** 清空所有消息并广播最新历史消息 */
     handleClearMessages(socket, io) {
         try {
             const user = this.userService.getUser(socket.id);
@@ -197,6 +222,9 @@ export default class SocketController {
         }
     }
 
+    /**
+     * 处理断开连接：移除用户、更新列表并记录日志
+     */
     handleDisconnect(socket, io, reason) {
         try {
             const user = this.userService.removeUser(socket.id);
