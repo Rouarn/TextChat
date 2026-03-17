@@ -1,0 +1,36 @@
+<svg width="300" height="155" viewBox="0 0 300 155" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="300" height="155" rx="10" fill="#2c3e50"/>
+  
+  <!-- Title -->
+  <text x="150" y="45" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#ecf0f1" text-anchor="middle">
+    Text Chat App
+  </text>
+  
+  <!-- Subtitle/Features -->
+  <text x="150" y="75" font-family="Arial, sans-serif" font-size="14" fill="#bdc3c7" text-anchor="middle">
+    Real-time Communication
+  </text>
+  
+  <!-- Tech Icons (Simplified) -->
+  <g transform="translate(60, 100)">
+    <!-- Node.js placeholder -->
+    <circle cx="0" cy="0" r="15" fill="#68a063"/>
+    <text x="0" y="30" font-family="Arial, sans-serif" font-size="10" fill="#ecf0f1" text-anchor="middle">Node.js</text>
+  </g>
+  
+  <g transform="translate(150, 100)">
+    <!-- Express placeholder -->
+    <circle cx="0" cy="0" r="15" fill="#34495e" stroke="#ecf0f1" stroke-width="1"/>
+    <text x="0" y="30" font-family="Arial, sans-serif" font-size="10" fill="#ecf0f1" text-anchor="middle">Express</text>
+  </g>
+  
+  <g transform="translate(240, 100)">
+    <!-- Socket.IO placeholder -->
+    <circle cx="0" cy="0" r="15" fill="#000000" stroke="#ecf0f1" stroke-width="1"/>
+    <text x="0" y="30" font-family="Arial, sans-serif" font-size="10" fill="#ecf0f1" text-anchor="middle">Socket.IO</text>
+  </g>
+
+  <!-- Border -->
+  <rect x="2" y="2" width="296" height="151" rx="8" fill="none" stroke="#3498db" stroke-width="2" opacity="0.5"/>
+</svg>

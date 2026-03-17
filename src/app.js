@@ -24,8 +24,8 @@ const io = new SocketIOServer(server, {
 });
 
 // 应用基础安全/网络设定
-app.disable('x-powered-by');
-app.set('trust proxy', (config.server && config.server.trustProxy) || false);
+app.disable("x-powered-by");
+app.set("trust proxy", (config.server && config.server.trustProxy) || false);
 
 // 启用压缩以提升传输效率
 app.use(compression());
@@ -40,19 +40,22 @@ app.locals.userService = userService;
 app.locals.messageService = messageService;
 
 // 兼容 ESM 与 CJS 的路径解析
-const isCJS = typeof __dirname !== 'undefined' && typeof __filename !== 'undefined';
+const isCJS =
+  typeof __dirname !== "undefined" && typeof __filename !== "undefined";
 const resolvedFilename = isCJS ? __filename : fileURLToPath(import.meta.url);
 const resolvedDirname = isCJS ? __dirname : path.dirname(resolvedFilename);
 
 // 静态文件服务 - 启用缓存/ETag/不可变资源提示
 // 固定使用 public 目录（不区分环境）
 const staticRoot = path.join(resolvedDirname, "../public");
-app.use(express.static(staticRoot, {
-  maxAge: '7d',
-  etag: true,
-  lastModified: true,
-  immutable: true
-}));
+app.use(
+  express.static(staticRoot, {
+    maxAge: "7d",
+    etag: true,
+    lastModified: true,
+    immutable: true,
+  })
+);
 
 // API路由
 app.use("/api", apiRoutes);
@@ -104,15 +107,6 @@ export function startServer() {
 ║  🚀 服务器运行在: http://localhost:${config.server.port}       
 ║  📊 健康检查: http://localhost:${config.server.port}/api/health
 ║  📈 统计信息: http://localhost:${config.server.port}/api/stats 
-║                                                                
-║  ✨ 功能特性:                        
-║  • 用户系统和头像                    
-║  • 消息气泡和时间戳                  
-║  • 打字指示器                        
-║  • 表情符号支持                      
-║  • 桌面通知                          
-║  • 响应式设计                        
-║  • 错误处理和日志                    
 ║                                      
 ╚══════════════════════════════════════
         `);
