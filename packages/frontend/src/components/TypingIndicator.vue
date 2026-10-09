@@ -1,5 +1,8 @@
 <template>
   <div class="typing-indicator" :class="{ visible: typingNames.length > 0 }">
+    <n-icon size="14" class="typing-icon">
+      <PencilOutline />
+    </n-icon>
     <span>{{ text }}</span>
     <span class="typing-dots">
       <span></span>
@@ -12,6 +15,7 @@
 <script setup>
 import { computed } from 'vue';
 import { useChat } from '../composables/useChat.js';
+import { PencilOutline } from '@vicons/ionicons5';
 
 const { typingNames } = useChat();
 

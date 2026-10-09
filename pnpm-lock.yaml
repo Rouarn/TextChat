@@ -41,6 +41,9 @@ importers:
       '@vakao-ui/socket-system':
         specifier: ^0.0.2
         version: 0.0.2(supports-color@10.2.2)
+      '@vicons/ionicons5':
+        specifier: ^0.13.0
+        version: 0.13.0
       naive-ui:
         specifier: ^2.44.1
         version: 2.45.3(vue@3.5.43)
@@ -221,6 +224,9 @@ packages:
   '@vakao-ui/socket-system@0.0.2':
     resolution: {integrity: sha512-MBmFn1ea+giwyfnvtesf1beQmkyPDS6qbtKM82wbJhc2qEZK/bDPcA6ldSeCsrztl+Z5wI0BYqbzquWJNPgOKQ==, tarball: https://packages.aliyun.com/676d377c721f4dc7be6ca65a/npm/npm-registry/@vakao-ui/socket-system/-/@vakao-ui/socket-system-0.0.2.tgz}
     engines: {node: '>=18'}
+
+  '@vicons/ionicons5@0.13.0':
+    resolution: {integrity: sha512-zvZKBPjEXKN7AXNo2Na2uy+nvuv6SP4KAMQxpKL2vfHMj0fSvuw7JZcOPCjQC3e7ayssKnaoFVAhbYcW6v41qQ==}
 
   '@vitejs/plugin-vue@6.0.9':
     resolution: {integrity: sha512-rD/MORlhaZMlXWW0rEn4FB4wMinWC0z/D7Ye160S5+Rs1mC8ZDAdcDp4SjKfUhG5t8q1ktcPVw4xuTkPRlzrSA==}
@@ -1032,6 +1038,8 @@ snapshots:
       - bufferutil
       - supports-color
       - utf-8-validate
+
+  '@vicons/ionicons5@0.13.0': {}
 
   '@vitejs/plugin-vue@6.0.9(vite@8.3.3(@types/node@26.6.4))(vue@3.5.43)':
     dependencies:

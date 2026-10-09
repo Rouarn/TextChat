@@ -1,15 +1,16 @@
 <template>
   <div ref="picker" class="emoji-picker" :class="{ 'is-open': open }">
     <div class="emoji-grid">
-      <button
+      <n-button
         v-for="emoji in emojis"
         :key="emoji"
-        type="button"
+        text
+        size="small"
         class="emoji-item"
         @click.stop="pick(emoji)"
       >
         {{ emoji }}
-      </button>
+      </n-button>
     </div>
   </div>
 </template>
@@ -29,48 +30,11 @@ const emit = defineEmits(['close', 'pick']);
 const picker = ref(null);
 
 const emojis = [
-  '😀',
-  '😂',
-  '🤣',
-  '😊',
-  '😍',
-  '🥰',
-  '😘',
-  '😎',
-  '🤔',
-  '😴',
-  '😪',
-  '😭',
-  '😡',
-  '🥺',
-  '😱',
-  '🤯',
-  '😳',
-  '🤗',
-  '🙄',
-  '😬',
-  '🫡',
-  '👍',
-  '👎',
-  '👏',
-  '🙏',
-  '💪',
-  '🫶',
-  '👋',
-  '❤️',
-  '🔥',
-  '✨',
-  '🎉',
-  '🎁',
-  '⭐',
-  '💯',
-  '🌹',
-  '☕',
-  '🍵',
-  '🍰',
-  '🚀',
-  '🌈',
-  '☀️',
+  '😀', '😂', '🤣', '😊', '😍', '🥰', '😘', '😎', '🤔', '😴',
+  '😪', '😭', '😡', '🥺', '😱', '🤯', '😳', '🤗', '🙄', '😬',
+  '🫡', '👍', '👎', '👏', '🙏', '💪', '🫶', '👋', '❤️', '🔥',
+  '✨', '🎉', '🎁', '⭐', '💯', '🌹', '☕', '🍵', '🍰', '🚀',
+  '🌈', '☀️',
 ];
 
 function pick(emoji) {

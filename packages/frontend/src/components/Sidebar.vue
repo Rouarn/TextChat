@@ -1,61 +1,61 @@
 <template>
-  <aside class="sidebar" :class="{ open }">
+  <div class="sidebar-inner">
     <div class="sidebar-header">
-      <i class="fas fa-users"></i>
-      <span>在线用户（{{ sortedUsers.length }}）</span>
-      <button
-        type="button"
-        class="sidebar-close"
-        aria-label="关闭侧栏"
-        @click="emit('close')"
-      >
-        <i class="fas fa-xmark"></i>
-      </button>
+      <n-icon size="18"><PeopleOutline /></n-icon>
+      <span class="sidebar-title">在线用户（{{ sortedUsers.length }}）</span>
     </div>
 
-    <div class="users-list">
-      <div
-        v-for="user in sortedUsers"
-        :key="user.id"
-        class="user-item"
-        :class="{ 'is-self': user.id === settings.userId }"
-      >
-        <div class="avatar">
-          {{ user.avatar || user.name?.charAt(0) || 'U' }}
-        </div>
-        <span class="user-name">{{ user.name || '匿名用户' }}</span>
-        <span v-if="user.id === settings.userId" class="self-badge">我</span>
-        <span v-else class="user-status"></span>
-      </div>
-    </div>
+    <n-scrollbar class="users-scroll">
+      <n-list :bordered="false" class="users-list">
+        <n-list-item
+          v-for="user in sortedUsers"
+          :key="user.id"
+          class="user-item"
+          :class="{ 'is-self': user.id === settings.userId }"
+        >
+          <template #prefix>
+            <n-avatar round size="small" :style="avatarStyle(user)">
+              {{ user.avatar || user.name?.charAt(0) || 'U' }}
+            </n-avatar>
+          </template>
+          <span class="user-name">{{ user.name || '匿名用户' }}</span>
+          <template v-if="user.id === settings.userId" #suffix>
+            <n-tag size="small" type="primary" round>我</n-tag>
+          </template>
+        </n-list-item>
+      </n-list>
+    </n-scrollbar>
 
     <div class="controls">
-      <button
-        type="button"
-        class="control-btn"
-        :class="{ 'is-active': settings.soundEnabled }"
-        @click="toggleSound"
-      >
-        <i class="fas fa-volume-high"></i>
-        <span>消息提示音</span>
-      </button>
+      <div class="control-row">
+        <n-icon size="18"><VolumeHighOutline /></n-icon>
+        <span class="control-label">消息提示音</span>
+        <n-switch :value="settings.soundEnabled" @update:value="toggleSound" />
+      </div>
 
-      <button
-        type="button"
-        class="control-btn"
-        :class="{ 'is-active': settings.notificationsEnabled }"
-        @click="toggleNotifications"
-      >
-        <i class="fas fa-bell"></i>
-        <span>桌面通知</span>
-      </button>
+      <div class="control-row">
+        <n-icon size="18"><NotificationsOutline /></n-icon>
+        <span class="control-label">桌面通知</span>
+        <n-switch
+          :value="settings.notificationsEnabled"
+          @update:value="toggleNotifications"
+        />
+      </div>
 
-      <button type="button" class="control-btn clear-btn" @click="handleClear">
-        <i class="fas fa-trash-can"></i>
-        <span>清空消息</span>
-      </button>
+      <n-button
+        block
+        type="error"
+        quaternary
+        class="clear-btn"
+        @click="handleClear"
+      >
+        <template #icon>
+          <n-icon><TrashOutline /></n-icon>
+        </template>
+        清空消息
+      </n-button>
     </div>
-  </aside>
+  </div>
 </template>
 
 <script setup>
@@ -65,6 +65,13 @@ import { useChat } from '../composables/useChat.js';
 import { useSettings } from '../composables/useSettings.js';
 import { useSocket } from '../composables/useSocket.js';
 import { useNotifications } from '../composables/useNotifications.js';
+import { useDialog } from 'naive-ui';
+import {
+  PeopleOutline,
+  VolumeHighOutline,
+  NotificationsOutline,
+  TrashOutline,
+} from '@vicons/ionicons5';
 
 defineProps({
   open: {
@@ -74,6 +81,8 @@ defineProps({
 });
 
 const emit = defineEmits(['close']);
+
+const dialog = useDialog();
 
 const { onlineUsers, clearMessages } = useChat();
 const { settings, updateSettings } = useSettings();
@@ -89,24 +98,38 @@ const sortedUsers = computed(() => {
   });
 });
 
-function toggleSound() {
-  updateSettings({ soundEnabled: !settings.soundEnabled });
+function avatarStyle(user) {
+  return {
+    background:
+      user.id === settings.userId
+        ? 'linear-gradient(135deg,#6366f1,#818cf8)'
+        : 'linear-gradient(135deg,#10b981,#34d399)',
+    color: '#fff',
+    fontWeight: 700,
+  };
 }
 
-function toggleNotifications() {
-  const next = !settings.notificationsEnabled;
-  updateSettings({ notificationsEnabled: next });
-  if (next) {
+function toggleSound(value) {
+  updateSettings({ soundEnabled: value });
+}
+
+function toggleNotifications(value) {
+  updateSettings({ notificationsEnabled: value });
+  if (value) {
     requestNotificationPermission();
   }
 }
 
 function handleClear() {
-  const confirmed = window.confirm(
-    '确定清空当前房间的全部消息吗？此操作对所有人生效。',
-  );
-  if (!confirmed) return;
-  clearHistory(config.chat.roomId);
-  clearMessages();
+  dialog.warning({
+    title: '确认清空消息',
+    content: '确定清空当前房间的全部消息吗？此操作对所有人生效。',
+    positiveText: '确定',
+    negativeText: '取消',
+    onPositiveClick: () => {
+      clearHistory(config.chat.roomId);
+      clearMessages();
+    },
+  });
 }
 </script>

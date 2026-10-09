@@ -70,7 +70,8 @@ export function useNotifications() {
       new Notification(`${message.username || '匿名用户'} 发来消息`, {
         body: message.content,
         icon: '/assets/favicon.png',
-        tag: 'text-chat-message',
+        // 每条消息使用唯一 tag，避免相同 tag 被系统折叠/替换成一条
+        tag: `text-chat-message-${message.id || Date.now()}`,
       });
     } catch {
       // ignore

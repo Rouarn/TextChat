@@ -1,42 +1,44 @@
 <template>
   <div class="input-container">
-    <button
-      type="button"
-      class="emoji-btn"
-      aria-label="表情"
-      @click="emit('toggle-emoji')"
-    >
-      <i class="far fa-smile"></i>
-    </button>
-    <textarea
-      ref="textarea"
-      v-model="text"
+    <n-button quaternary circle aria-label="表情" @click="emit('toggle-emoji')">
+      <template #icon>
+        <n-icon><HappyOutline /></n-icon>
+      </template>
+    </n-button>
+
+    <n-input
+      ref="inputRef"
+      v-model:value="text"
+      type="textarea"
       class="message-input"
-      rows="1"
+      :autosize="{ minRows: 1, maxRows: 5 }"
       maxlength="2000"
       placeholder="输入消息，Enter 发送…"
-      @input="onInput"
       @keydown="onKeydown"
       @compositionstart="isComposing = true"
       @compositionend="isComposing = false"
-    ></textarea>
-    <button
-      type="button"
-      class="send-btn"
+    />
+
+    <n-button
+      type="primary"
+      circle
       :disabled="!canSend"
       aria-label="发送"
       @click="send"
     >
-      <i class="fas fa-paper-plane"></i>
-    </button>
+      <template #icon>
+        <n-icon><SendOutline /></n-icon>
+      </template>
+    </n-button>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, nextTick, onBeforeUnmount } from 'vue';
+import { ref, computed, watch, nextTick, onBeforeUnmount } from 'vue';
 import { config } from '@text-chat/shared';
 import { useChat } from '../composables/useChat.js';
 import { useSocket } from '../composables/useSocket.js';
+import { HappyOutline, SendOutline } from '@vicons/ionicons5';
 
 const ROOM = config.chat.roomId;
 
@@ -46,12 +48,21 @@ const { connectionStatus, showNotice } = useChat();
 const { send: socketSend, setTyping } = useSocket();
 
 const text = ref('');
-const textarea = ref(null);
+const inputRef = ref(null);
 const isComposing = ref(false);
 
 const canSend = computed(
   () => connectionStatus.value === 'connected' && text.value.trim().length > 0,
 );
+
+// 监听输入内容变化：上报/停止 typing 状态
+watch(text, (val) => {
+  if (val.trim()) {
+    reportTyping();
+  } else {
+    stopTyping();
+  }
+});
 
 let typingTimer = null;
 let lastTypingEmit = 0;
@@ -84,23 +95,6 @@ function stopTyping() {
   lastTypingEmit = 0;
 }
 
-function autoResize() {
-  const el = textarea.value;
-  if (!el) return;
-  el.style.height = 'auto';
-  const height = Math.min(Math.max(el.scrollHeight, 42), 110);
-  el.style.height = `${height}px`;
-}
-
-function onInput() {
-  autoResize();
-  if (text.value.trim()) {
-    reportTyping();
-  } else {
-    stopTyping();
-  }
-}
-
 function onKeydown(e) {
   if (e.key === 'Enter' && !e.shiftKey && !isComposing.value) {
     e.preventDefault();
@@ -114,16 +108,19 @@ async function send() {
   try {
     await socketSend(ROOM, content);
     text.value = '';
-    await nextTick();
-    autoResize();
     stopTyping();
   } catch (error) {
     showNotice(error?.message || '发送失败，请重试');
   }
 }
 
+function getTextareaEl() {
+  // n-input(type=textarea) 实例暴露 textareaElRef
+  return inputRef.value?.textareaElRef ?? null;
+}
+
 function insertEmoji(emoji) {
-  const el = textarea.value;
+  const el = getTextareaEl();
   if (!el) {
     text.value += emoji;
     return;
@@ -135,7 +132,6 @@ function insertEmoji(emoji) {
     const pos = start + emoji.length;
     el.focus();
     el.setSelectionRange(pos, pos);
-    autoResize();
   });
 }
 

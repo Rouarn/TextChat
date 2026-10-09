@@ -30,7 +30,8 @@ function setHistory(list) {
 }
 
 function addMessage(message) {
-  messages.value.push(message);
+  // 不可变更新：生成新数组引用，确保 watch(newVal, oldVal) 能正确拿到长度差
+  messages.value = [...messages.value, message];
 }
 
 function setOnlineUsers(users) {
