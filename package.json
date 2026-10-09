@@ -1,33 +1,32 @@
 {
   "name": "text-chat",
-  "version": "2.0.0",
-  "description": "实时文本聊天应用 - 重构版",
+  "version": "3.0.0",
+  "description": "实时文本聊天应用 - 基于 @vakao-ui/socket-system 重构",
   "type": "module",
-  "main": "src/app.js",
+  "main": "src/server.js",
   "scripts": {
-    "start": "node src/server.js"
+    "start": "node src/server.js",
+    "vendor": "esbuild vendor/entry.js --bundle --format=esm --platform=browser --target=es2020 --minify --outfile=public/vendor/socket-system.bundle.js"
   },
   "dependencies": {
+    "@vakao-ui/socket-system": "^0.0.2",
     "compression": "^1.8.1",
     "express": "^4.18.2",
-    "socket.io": "^4.7.2"
+    "socket.io": "^4.7.2",
+    "socket.io-client": "^4.8.4"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "esbuild": "^0.24.0"
+  },
   "keywords": [
     "chat",
     "realtime",
     "websocket",
-    "socket.io",
-    "express",
-    "nodejs"
+    "socket.io"
   ],
   "author": "Chat App Team",
   "license": "MIT",
   "engines": {
-    "node": ">=14.0.0"
-  },
-  "repository": {
-    "type": "git",
-    "url": "."
+    "node": ">=18.0.0"
   }
 }

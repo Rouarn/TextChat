@@ -1,0 +1,9 @@
+# pnpm v12 设置文件（替代 package.json 中已废弃的 "pnpm" 字段）
+# 构建脚本审批（allowBuilds）：
+# esbuild 的平台二进制由 optional 依赖（@esbuild/darwin-arm64 等）提供，
+# postinstall 仅做校验，无需执行。显式置 false 表示"已审查、拒绝执行"，
+# 安装时不再触发 ERR_PNPM_IGNORED_BUILDS。
+allowBuilds:
+  esbuild: false
+minimumReleaseAgeExclude:
+  - '@vakao-ui/socket-system@0.0.2'

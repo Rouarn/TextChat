@@ -1,14 +1,13 @@
-<!DOCTYPE html>
+<!doctype html>
 <!--
-  实时文本聊天系统 - 前端页面
-  结构说明：
-  - head：字体与图标、核心样式、favicon
-  - body：头部状态、用户设置、聊天区域、侧栏、表情选择器、移动端遮罩
-  - 脚本：Socket.IO 客户端（提供全局 io）、前端模块 socketClient.js 与 app.js
-  性能与可用性：
-  - 使用 viewport-fit=cover 适配安全区域
-  - 引入现代字体与图标库
-  - 样式文件负责响应式与移动端适配
+  实时文本聊天系统 - 前端页面（v4 模块化重构）
+
+  结构：
+  - head：资源预连接、字体与图标、核心样式、favicon
+  - body：应用卡片（顶栏 / 身份栏 / 聊天区 + 侧栏 / 表情选择器 / 遮罩）
+
+  本文件只负责"布局骨架"：所有结构性元素及类名固定，
+  动态内容由 js/components 下的组件渲染，避免 HTML/JS 重复描述结构。
 -->
 <html lang="zh-CN">
   <head>
@@ -18,16 +17,21 @@
       content="width=device-width, initial-scale=1, viewport-fit=cover"
     />
     <title>实时文本聊天</title>
-    <!-- 现代优雅字体 -->
+
+    <!-- 资源预连接：缩短字体/图标首次加载时间 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
       rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
     />
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
     />
-    <link rel="stylesheet" href="/css/style.css" />
+
+    <link rel="stylesheet" href="/css/style.css?v=4" />
     <link
       rel="icon"
       href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💬</text></svg>"
@@ -35,57 +39,27 @@
   </head>
   <body>
     <div class="chat-container">
-      <!-- 头部 -->
-      <div class="header">
-        <div class="header-inner">
-          <h1 class="app-title">
-            <i class="fas fa-comments"></i>
-            实时文本聊天
-          </h1>
-          <div class="connection-status">
-            <div class="status-dot" id="statusDot"></div>
-            <span id="statusText">连接中...</span>
-          </div>
-        </div>
-      </div>
+      <!-- 顶栏：应用标识 + 连接状态（内容由 TopBar 组件渲染） -->
+      <header class="header" id="topBar"></header>
 
-      <!-- 用户设置区域 -->
-      <div class="user-setup">
-        <div class="user-info">
-          <div class="avatar" id="userAvatar">U</div>
-          <input
-            type="text"
-            class="username-input"
-            id="usernameInput"
-            placeholder="输入您的昵称"
-            maxlength="20"
-          />
-          <button
-            class="mobile-nav-btn"
-            id="mobileNavBtn"
-            aria-label="打开在线用户"
-          >
-            <i class="fas fa-users"></i>
-          </button>
-        </div>
-        <div class="online-users">
-          <i class="fas fa-users"></i>
-          在线用户: <span id="onlineCount">0</span>
-        </div>
-      </div>
+      <!-- 身份栏：头像 / 昵称编辑 / 在线人数 / 侧栏开关（IdentityBar 组件） -->
+      <section class="user-setup" id="identityBar"></section>
 
-      <!-- 主要内容区域：左侧为聊天区域，右侧为在线用户侧栏 -->
+      <!-- 主体：聊天区 + 侧栏 -->
       <div class="main-content">
-        <!-- 聊天区域 -->
         <div class="chat-area">
-          <!-- 消息容器 -->
-          <div class="messages-container" id="messagesContainer">
-            <!-- 消息将在这里显示 -->
+          <!-- 断线重连横幅（默认隐藏） -->
+          <div class="connection-banner" id="connectionBanner">
+            <i class="fas fa-circle-notch fa-spin"></i>
+            <span id="connectionBannerText"></span>
           </div>
 
-          <!-- 打字指示器 -->
+          <!-- 消息滚动区：骨架屏 / 日期分隔 / 消息气泡 / 空状态（MessageList 组件） -->
+          <div class="messages-container" id="messagesContainer"></div>
+
+          <!-- 打字指示器（TypingIndicator 组件） -->
           <div class="typing-indicator" id="typingIndicator">
-            <span id="typingUser">用户</span> 正在输入
+            <span id="typingUser"></span>
             <span class="typing-dots">
               <span></span>
               <span></span>
@@ -93,71 +67,32 @@
             </span>
           </div>
 
-          <!-- 输入区域 -->
-          <div class="input-area">
-            <div class="input-container">
-              <button class="emoji-btn" id="emojiBtn" aria-label="打开表情">
-                😊
-              </button>
-              <textarea
-                class="message-input"
-                id="messageInput"
-                placeholder="输入消息..."
-                rows="1"
-                maxlength="500"
-              ></textarea>
-              <button
-                class="send-btn"
-                id="sendBtn"
-                disabled
-                aria-label="发送消息"
-              >
-                <i class="fas fa-paper-plane"></i>
-              </button>
-            </div>
+          <!-- 输入区（Composer 组件渲染内部控件） -->
+          <div class="input-area" id="inputArea">
+            <div class="input-container" id="inputContainer"></div>
           </div>
+
+          <!-- 回到底部按钮（默认隐藏，未贴底且有新消息时出现） -->
+          <button class="jump-latest" id="jumpLatest" aria-label="查看最新消息">
+            <i class="fas fa-arrow-down"></i>
+            <span class="jump-badge" id="jumpBadge"></span>
+          </button>
         </div>
 
-        <!-- 侧边栏 -->
-        <div class="sidebar" id="sidebar">
-          <div class="sidebar-header">
-            <i class="fas fa-users"></i>
-            <span>在线用户</span>
-          </div>
-          <div class="users-list" id="usersList">
-            <!-- 用户列表将在这里显示 -->
-          </div>
-          <div class="controls">
-            <button class="control-btn sound-toggle active" id="soundToggle">
-              <i class="fas fa-volume-up"></i>
-              <span>消息提示音</span>
-            </button>
-            <button class="control-btn notification-toggle active" id="notificationToggle">
-              <i class="fas fa-bell"></i>
-              <span>显示通知</span>
-            </button>
-            <button class="control-btn clear-btn" id="clearBtn">
-              <i class="fas fa-trash"></i>
-              <span>清空聊天记录</span>
-            </button>
-          </div>
-        </div>
+        <!-- 侧栏：在线用户 + 功能开关（Sidebar 组件；平板/手机为抽屉） -->
+        <aside class="sidebar" id="sidebar"></aside>
       </div>
 
-      <div class="emoji-picker" id="emojiPicker" aria-label="表情选择">
-        <div class="emoji-grid" id="emojiGrid">
-          <!-- 表情符号将在这里显示 -->
-        </div>
+      <!-- 表情选择器（EmojiPicker 组件；事件委托） -->
+      <div class="emoji-picker" id="emojiPicker">
+        <div class="emoji-grid" id="emojiGrid"></div>
       </div>
 
-      <!-- 移动端遮罩层：与侧栏联动，点击关闭 -->
+      <!-- 移动端/平板遮罩：与侧栏联动 -->
       <div class="mobile-overlay" id="mobileOverlay"></div>
     </div>
 
-    <!-- 引入由服务器提供的 Socket.IO 客户端（提供全局 io） -->
-    <script src="./socket.io/socket.io.js"></script>
-    <!-- 使用 ESModule 方式引入前端脚本（已通过构建打包） -->
-    <script type="module" src="/js/socketClient.js"></script>
-    <script type="module" src="/js/app.js"></script>
+    <!-- 唯一入口模块（socket.io-client 已随 vendor bundle 提供） -->
+    <script type="module" src="/js/app.js?v=4"></script>
   </body>
 </html>

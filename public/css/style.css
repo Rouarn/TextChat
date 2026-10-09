@@ -1,100 +1,180 @@
-/* 实时文本聊天系统 - 样式文件
- * 结构：
- * - 基础与主题变量
- * - 布局（头部/主体/侧栏）
- * - 消息气泡与打字指示器
- * - 输入区与表情选择器
- * - 动画与滚动条
- * - 响应式与安全区域适配
- * 说明：
- * - 颜色与阴影统一使用 CSS 变量
- * - 移动端通过 --vh 适配键盘弹出带来的视口变化
- */
+/* ==========================================================================
+   实时文本聊天系统 - 样式文件（v4 模块化重构）
+   --------------------------------------------------------------------------
+   目录：
+     1. 重置与设计令牌
+     2. 基础排版与环境背景
+     3. 应用卡片骨架
+     4. 顶栏
+     5. 身份栏
+     6. 主体布局
+     7. 消息滚动区
+     8. 消息气泡（★ 视觉规范原样保留，勿随意改动）
+     9. 日期分隔 / 骨架屏 / 空状态
+    10. 打字指示器
+    11. 输入区
+    12. 表情选择器
+    13. 侧栏
+    14. 遮罩 / 重连横幅 / 回到底部按钮
+    15. 动画
+    16. 滚动条
+    17. 响应式（平板抽屉 / 手机全屏 / 小屏 / 横屏）
+    18. 安全区域与减弱动效
+   ========================================================================== */
 
-/* 基础重置 */
+/* ==========================================================================
+   1. 重置与设计令牌
+   ========================================================================== */
+
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-/* 主题变量与视口适配 */
 :root {
+  /* 表面与文字 */
   --bg: #f6f7fb;
   --surface: #ffffff;
   --surface-2: #f3f4f6;
   --border: #e5e7eb;
   --text: #111827;
   --muted: #6b7280;
+
+  /* 品牌色（靛蓝） */
   --accent-50: #eef2ff;
   --accent-500: #6366f1;
   --accent-600: #4f46e5;
+
+  /* 状态色 */
   --success: #10b981;
   --danger: #ef4444;
+  --warning: #f59e0b;
+
+  /* 阴影与渐变 */
   --shadow: 0 12px 30px rgba(17, 24, 39, 0.08);
+  --shadow-lg:
+    0 1px 2px rgba(17, 24, 39, 0.04), 0 12px 24px -8px rgba(17, 24, 39, 0.12),
+    0 24px 48px -16px rgba(79, 70, 229, 0.18);
   --accent-gradient: linear-gradient(
     90deg,
     var(--accent-500),
     var(--accent-600)
   );
+
+  /* 圆角 */
+  --radius-card: 18px;
+  --radius-pill: 999px;
+
+  /* 视口变量（由 visualViewport 驱动，兼容旧逻辑的 --vh 保留） */
   --vh: 1vh;
+  --app-vh: 100dvh;
+
+  /* ★ 自己消息气泡配色（与既有视觉完全一致） */
+  --own-bubble-bg: rgba(16, 185, 129, 0.12);
+  --own-bubble-border: rgba(16, 185, 129, 0.35);
+  --own-bubble-text: var(--text);
 }
 
-/* 页面基础 */
+/* ==========================================================================
+   2. 基础排版与环境背景
+   ========================================================================== */
+
 body {
-  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue",
+  font-family:
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Oxygen,
+    Ubuntu,
+    Cantarell,
+    "Fira Sans",
+    "Droid Sans",
+    "Helvetica Neue",
     sans-serif;
-  background: var(--bg);
   color: var(--text);
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 20px;
+
+  /* 柔和的环境渐变，配合两团彩色光斑衬托卡片 */
+  background:
+    radial-gradient(
+      900px 500px at 12% -8%,
+      rgba(99, 102, 241, 0.14),
+      transparent 60%
+    ),
+    radial-gradient(
+      800px 480px at 108% 110%,
+      rgba(16, 185, 129, 0.12),
+      transparent 60%
+    ),
+    var(--bg);
+  background-attachment: fixed;
 }
 
+/* ==========================================================================
+   3. 应用卡片骨架
+   ========================================================================== */
+
 .chat-container {
+  position: relative;
   width: 100%;
   max-width: 1200px;
   height: 88vh;
   background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  box-shadow: var(--shadow);
+  border: 1px solid rgba(229, 231, 235, 0.9);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-lg);
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
 
-/* 头部 */
+/* ==========================================================================
+   4. 顶栏
+   ========================================================================== */
+
 .header {
   background: var(--surface);
-  color: var(--text);
-  padding: 16px 20px;
+  padding: 14px 20px;
   border-bottom: 1px solid var(--border);
   position: relative;
 }
+
 .header-inner {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
 }
-.header h1 {
-  font-size: 1.8rem;
-  margin-bottom: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-}
+
 .app-title {
   font-size: 1.25rem;
   font-weight: 700;
   display: flex;
   align-items: center;
   gap: 10px;
+  letter-spacing: -0.01em;
 }
+
+.app-title .title-mark {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent-gradient);
+  color: #fff;
+  font-size: 1.05rem;
+  box-shadow: 0 6px 14px rgba(79, 70, 229, 0.35);
+}
+
 .header::after {
   content: "";
   position: absolute;
@@ -105,30 +185,68 @@ body {
   background: var(--accent-gradient);
   opacity: 0.65;
 }
-.connection-status {
-  display: flex;
+
+/* 连接状态药丸 */
+.connection-pill {
+  display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
+  font-weight: 500;
   color: var(--muted);
+  padding: 6px 12px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  transition: all 0.25s ease;
+  white-space: nowrap;
 }
+
+.connection-pill.is-connected {
+  color: #047857;
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.25);
+}
+
+.connection-pill.is-connecting {
+  color: #92610a;
+  background: rgba(245, 158, 11, 0.1);
+  border-color: rgba(245, 158, 11, 0.25);
+}
+
+.connection-pill.is-error,
+.connection-pill.is-disconnected {
+  color: #b91c1c;
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.22);
+}
+
 .status-dot {
-  width: 10px;
-  height: 10px;
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
   background: #c4c8d0;
-  animation: pulse 2s infinite;
+  flex-shrink: 0;
 }
+
 .status-dot.connected {
   background: var(--success);
 }
-.app-title i,
-.online-users i,
-.sidebar-header i {
-  color: var(--accent-600);
+
+.connection-pill.is-connecting .status-dot {
+  background: var(--warning);
+  animation: pulse 1.4s infinite;
 }
 
-/* 用户信息与导航 */
+.connection-pill.is-error .status-dot,
+.connection-pill.is-disconnected .status-dot {
+  background: var(--danger);
+}
+
+/* ==========================================================================
+   5. 身份栏
+   ========================================================================== */
+
 .user-setup {
   background: var(--surface);
   padding: 14px 20px;
@@ -138,11 +256,13 @@ body {
   gap: 15px;
   flex-wrap: wrap;
 }
+
 .user-info {
   display: flex;
   align-items: center;
   gap: 12px;
 }
+
 .avatar {
   width: 40px;
   height: 40px;
@@ -153,8 +273,11 @@ body {
   color: #fff;
   font-weight: 600;
   background: var(--accent-gradient);
-  box-shadow: 0 0 0 2px var(--surface), 0 6px 16px rgba(17, 24, 39, 0.08);
+  box-shadow:
+    0 0 0 2px var(--surface),
+    0 6px 16px rgba(17, 24, 39, 0.08);
 }
+
 .username-input {
   background: var(--surface);
   border: 1.2px solid var(--border);
@@ -162,15 +285,181 @@ body {
   padding: 10px 12px;
   color: var(--text);
   outline: none;
-  transition: border-color 0.3s;
+  transition:
+    border-color 0.3s,
+    box-shadow 0.3s;
+  min-width: 180px;
 }
+
 .username-input::placeholder {
   color: #9aa3af;
 }
+
 .username-input:focus {
   border-color: var(--accent-500);
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
 }
+
+/* v4 身份栏：收起态 + 行内编辑态 */
+.identity-inner {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+}
+
+.identity-display {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.identity-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent-gradient);
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+.identity-name {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 46vw;
+}
+
+.identity-edit-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 9px;
+  background: var(--surface-2);
+  color: var(--muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.identity-edit-btn:hover {
+  background: var(--accent-50);
+  color: var(--accent-600);
+}
+
+.identity-editor {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+}
+
+.user-setup.is-editing .identity-display {
+  display: none;
+}
+
+.user-setup.is-editing .identity-editor {
+  display: flex;
+}
+
+.identity-input {
+  flex: 1;
+  min-width: 0;
+  background: var(--surface);
+  border: 1.2px solid var(--border);
+  border-radius: 10px;
+  padding: 9px 12px;
+  color: var(--text);
+  outline: none;
+  font-size: 0.92rem;
+  transition:
+    border-color 0.3s,
+    box-shadow 0.3s;
+}
+
+.identity-input:focus {
+  border-color: var(--accent-500);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+.identity-avatar-input {
+  width: 56px;
+  flex-shrink: 0;
+  text-align: center;
+  background: var(--surface);
+  border: 1.2px solid var(--border);
+  border-radius: 10px;
+  padding: 9px 6px;
+  color: var(--text);
+  outline: none;
+  font-size: 0.92rem;
+  transition:
+    border-color 0.3s,
+    box-shadow 0.3s;
+}
+
+.identity-avatar-input:focus {
+  border-color: var(--accent-500);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+.identity-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.identity-save-btn,
+.identity-cancel-btn {
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.identity-save-btn {
+  height: 38px;
+  padding: 0 16px;
+  border-radius: 10px;
+  background: var(--accent-gradient);
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.88rem;
+}
+
+.identity-save-btn:hover {
+  filter: brightness(1.05);
+}
+
+.identity-cancel-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: var(--surface-2);
+  color: var(--muted);
+}
+
+.identity-cancel-btn:hover {
+  background: var(--accent-50);
+  color: var(--accent-600);
+}
+
 .online-users {
   margin-left: auto;
   display: flex;
@@ -179,75 +468,97 @@ body {
   font-size: 0.9rem;
   color: var(--muted);
 }
+
+.online-count-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 7px;
+  border-radius: var(--radius-pill);
+  background: var(--accent-50);
+  color: var(--accent-600);
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
 .mobile-nav-btn {
   display: none;
   width: 44px;
   height: 44px;
   border: none;
-  margin-left: auto;
   border-radius: 12px;
   background: var(--surface-2);
-  color: var(--text);
+  color: var(--accent-600);
   cursor: pointer;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s ease;
+  transition: all 0.25s ease;
   font-size: 18px;
-  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
-  position: relative;
-  overflow: hidden;
-}
-.mobile-nav-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-}
-.mobile-nav-btn:active {
-  transform: translateY(0);
-  box-shadow: 0 2px 6px rgba(102, 126, 234, 0.3);
-}
-.mobile-nav-btn::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.2),
-    transparent
-  );
-  transition: left 0.5s;
-}
-.mobile-nav-btn:active::before {
-  left: 100%;
 }
 
-/* 主体布局 */
+.mobile-nav-btn:hover {
+  background: var(--accent-50);
+  transform: translateY(-1px);
+}
+
+.mobile-nav-btn:active {
+  transform: translateY(0) scale(0.96);
+}
+
+.app-title .title-mark i,
+.online-users > i,
+.sidebar-header > i {
+  color: inherit;
+}
+
+.online-users > i,
+.sidebar-header > i {
+  color: var(--accent-600);
+}
+
+/* ==========================================================================
+   6. 主体布局
+   ========================================================================== */
+
 .main-content {
   flex: 1;
   display: flex;
   overflow: hidden;
   background: var(--surface);
+  min-height: 0;
 }
+
 .chat-area {
+  position: relative;
   flex: 1;
   display: flex;
   flex-direction: column;
   border-right: 1px solid var(--border);
-}
-.messages-container {
-  flex: 1;
-  padding: 12px;
-  background: var(--surface);
-  overflow-y: auto;
-  scroll-behavior: smooth;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior-y: contain;
+  min-width: 0;
 }
 
-/* 消息气泡 */
+/* ==========================================================================
+   7. 消息滚动区
+   ========================================================================== */
+
+.messages-container {
+  flex: 1;
+  min-height: 0;
+  padding: 16px 14px 8px;
+  background: var(--surface);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  /* 限制滚动时的重排/重绘范围，提升长列表滚动性能 */
+  contain: layout style;
+}
+
+/* ==========================================================================
+   8. 消息气泡 ★ 视觉规范（形状/颜色/排版/间距）原样保留
+   ========================================================================== */
+
 .message-bubble {
   max-width: 80%;
   min-width: 120px;
@@ -257,14 +568,17 @@ body {
   display: flex;
   flex-direction: column;
 }
+
 .message-bubble {
   width: fit-content;
 }
+
 .message-header {
   display: flex;
   gap: 10px;
   align-items: flex-start;
 }
+
 .message-avatar {
   width: 32px;
   height: 32px;
@@ -276,10 +590,13 @@ body {
   justify-content: center;
   font-weight: 600;
   box-shadow: none;
+  flex-shrink: 0;
 }
+
 .message-bubble.own .message-avatar {
   background: var(--accent-gradient);
 }
+
 .message-info {
   display: grid;
   grid-template-columns: 1fr;
@@ -287,48 +604,59 @@ body {
   width: fit-content;
   max-width: 80%;
 }
+
 .message-bubble.own .message-info {
   align-items: end;
   justify-items: end;
   text-align: right;
 }
+
 .message-bubble.other .message-info {
   align-items: start;
   justify-items: start;
   text-align: left;
 }
+
 .message-bubble.own {
   margin-left: auto;
   align-items: flex-end;
 }
+
 .message-bubble.other {
   margin-right: auto;
   align-items: flex-start;
 }
+
 .message-bubble.own .message-header {
   align-self: flex-end;
   justify-content: flex-end;
 }
+
 .message-bubble.other .message-header {
   align-self: flex-start;
 }
+
 .message-username,
 .message-time {
   display: inline-block;
 }
+
 .message-username {
   font-weight: 600;
   font-size: 0.8rem;
   color: var(--muted);
   margin-bottom: 6px;
 }
+
 .message-time {
   font-size: 0.72rem;
   color: var(--muted);
 }
+
 .message-bubble.own .message-time {
   align-self: end;
 }
+
 .message-content {
   display: inline-block;
   width: fit-content;
@@ -339,18 +667,22 @@ body {
   line-height: 1.5;
   box-shadow: 0 6px 16px rgba(17, 24, 39, 0.05);
   position: relative;
+  overflow-wrap: anywhere;
 }
+
 .message-bubble.other .message-content {
   background: var(--accent-50);
   color: var(--text);
   box-shadow: inset 3px 0 0 rgba(37, 99, 235, 0.35);
 }
+
 .message-bubble.own .message-content {
   background: var(--accent-gradient);
   color: #fff;
   box-shadow: inset -3px 0 0 rgba(16, 185, 129, 0.35);
   text-align: justify;
 }
+
 .message-content::before {
   content: "";
   position: absolute;
@@ -359,138 +691,330 @@ body {
   height: 0;
   border: 6px solid transparent;
 }
+
 .message-bubble.own .message-content::before {
   right: -10px;
   border-left-color: var(--accent-600);
 }
+
 .message-bubble.other .message-content::before {
   left: -12px;
   border-right-color: white;
 }
 
-/* 打字指示器 */
+/* 自己消息气泡配色优化（柔和薄荷绿，最终生效样式） */
+.message-bubble.own .message-content {
+  background: var(--own-bubble-bg);
+  color: var(--own-bubble-text);
+  box-shadow:
+    inset -3px 0 0 var(--own-bubble-border),
+    0 6px 16px rgba(17, 24, 39, 0.05);
+}
+
+.message-bubble.own .message-content::before {
+  right: -10px;
+  border-left-color: var(--own-bubble-border);
+}
+
+.message-bubble.own .message-username {
+  color: var(--success);
+}
+
+/* ==========================================================================
+   9. 日期分隔 / 骨架屏 / 空状态
+   ========================================================================== */
+
+/* 日期分隔药丸 */
+.day-divider {
+  display: flex;
+  justify-content: center;
+  margin: 6px 0 14px;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.day-divider span {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--muted);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  padding: 4px 12px;
+  border-radius: var(--radius-pill);
+}
+
+/* 骨架屏 */
+.skeleton-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 4px 2px;
+}
+
+.skeleton-bubble {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  max-width: 80%;
+}
+
+.skeleton-bubble.is-own {
+  flex-direction: row-reverse;
+  align-self: flex-end;
+}
+
+.skeleton-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.skeleton-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 220px;
+}
+
+.skeleton-bubble.is-own .skeleton-lines {
+  align-items: flex-end;
+}
+
+.skeleton-bar {
+  height: 13px;
+  border-radius: 7px;
+}
+
+.skeleton-bar.w-70 {
+  width: 70%;
+}
+.skeleton-bar.w-100 {
+  width: 100%;
+}
+.skeleton-bar.w-45 {
+  width: 45%;
+}
+
+.skeleton-avatar,
+.skeleton-bar {
+  background: linear-gradient(90deg, #eef0f4 25%, #f7f8fb 37%, #eef0f4 63%);
+  background-size: 400% 100%;
+  animation: shimmer 1.4s ease infinite;
+}
+
+/* 空状态 */
+.empty-state {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px;
+  text-align: center;
+  animation: fadeIn 0.4s ease-out;
+  pointer-events: none;
+}
+
+.empty-state img {
+  width: 180px;
+  max-width: 70%;
+  opacity: 0.9;
+}
+
+.empty-state .empty-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.empty-state .empty-sub {
+  font-size: 0.88rem;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+/* ==========================================================================
+   10. 打字指示器
+   ========================================================================== */
+
 .typing-indicator {
   display: none;
+  align-items: center;
+  gap: 4px;
   background: var(--surface-2);
   border: 1px solid var(--border);
   color: var(--muted);
-  margin: 8px auto 12px;
-  border-radius: 999px;
+  margin: 4px 14px 10px;
+  padding: 8px 14px;
+  border-radius: var(--radius-pill);
+  font-size: 0.82rem;
+  width: fit-content;
 }
+
+.typing-indicator.visible {
+  display: inline-flex;
+  animation: fadeIn 0.2s ease-out;
+}
+
 .typing-dots {
-  display: inline-block;
+  display: inline-flex;
+  gap: 3px;
+  margin-left: 2px;
 }
+
 .typing-dots span {
   display: inline-block;
   width: 6px;
   height: 6px;
-  margin-left: 3px;
-  background: #c4c8d0;
+  background: #9aa3af;
   border-radius: 50%;
   animation: typing 1.2s infinite ease-in-out;
 }
 
-/* 输入区域 */
+.typing-dots span:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.typing-dots span:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+/* ==========================================================================
+   11. 输入区
+   ========================================================================== */
+
 .input-area {
   background: var(--surface);
   border-top: 1px solid var(--border);
-  padding: 10px 12px;
+  padding: 10px 14px;
 }
+
 .input-container {
   display: flex;
   gap: 10px;
   align-items: flex-end;
   background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
   padding: 6px;
+  transition:
+    border-color 0.25s,
+    box-shadow 0.25s;
 }
+
+.input-container:focus-within {
+  border-color: var(--accent-500);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+}
+
 .message-input {
   flex: 1;
   padding: 10px 12px;
-  border: 2px solid #ddd;
-  border-radius: 25px;
+  border: none;
   outline: none;
   resize: none;
-  min-height: 48px;
-  max-height: 100px;
+  min-height: 42px;
+  max-height: 110px;
   font-family: inherit;
-  transition: border-color 0.3s;
   font-size: 16px;
-  background: var(--surface);
+  line-height: 1.45;
+  background: transparent;
   color: var(--text);
+  scrollbar-width: none;
 }
+
 .message-input::placeholder {
   color: #9aa3af;
 }
-.message-input {
-  scrollbar-width: none;
-}
+
 .message-input::-webkit-scrollbar {
   width: 0;
   height: 0;
 }
-.message-input:focus {
-  border-color: var(--accent-500);
-}
+
 .emoji-btn,
 .send-btn {
-  width: 48px;
-  height: 48px;
+  width: 44px;
+  height: 44px;
   border: none;
   border-radius: 50%;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s;
+  transition: all 0.25s;
   font-size: 18px;
   flex-shrink: 0;
 }
+
 .emoji-btn {
   background: var(--surface-2);
-  border: 1px solid var(--border);
   color: var(--text);
 }
-.emoji-btn:hover,
-.send-btn:hover {
-  background: #eaecef;
-}
-.send-btn {
-  background: var(--accent-gradient);
-  border: 1px solid var(--accent-600);
-  color: #fff;
-}
-.send-btn:disabled {
-  opacity: 1;
-  background: #9aa3af;
-  border-color: #9aa3af;
-  cursor: not-allowed;
-}
-.send-btn:active {
-  transform: scale(0.95);
+
+.emoji-btn:hover {
+  background: var(--accent-50);
 }
 
-/* 表情选择 */
+.emoji-btn.is-active {
+  background: var(--accent-50);
+  color: var(--accent-600);
+}
+
+.send-btn {
+  background: var(--accent-gradient);
+  color: #fff;
+  box-shadow: 0 6px 14px rgba(79, 70, 229, 0.32);
+}
+
+.send-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(79, 70, 229, 0.4);
+}
+
+.send-btn:disabled {
+  background: #c4c8d0;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.send-btn:active:not(:disabled) {
+  transform: scale(0.94);
+}
+
+/* ==========================================================================
+   12. 表情选择器
+   ========================================================================== */
+
 .emoji-picker {
   position: absolute;
-  bottom: 136px;
+  bottom: 132px;
   left: 92px;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 12px;
-  box-shadow: var(--shadow);
-  padding: 15px;
+  border-radius: 14px;
+  box-shadow: var(--shadow-lg);
+  padding: 14px;
   display: none;
   z-index: 1000;
-  max-height: 200px;
+  max-height: 210px;
   overflow-y: auto;
+  transform-origin: bottom left;
+  animation: popIn 0.18s ease-out;
 }
+
+.emoji-picker.is-open {
+  display: block;
+}
+
 .emoji-grid {
   display: grid;
   grid-template-columns: repeat(10, 1fr);
-  gap: 8px;
+  gap: 6px;
 }
+
 .emoji-item {
   width: 36px;
   height: 36px;
@@ -499,17 +1023,21 @@ body {
   justify-content: center;
   cursor: pointer;
   border-radius: 8px;
-  transition: background 0.2s;
+  transition: background 0.15s;
   font-size: 20px;
-  background: var(--surface-2);
-  border: 1px solid var(--border);
+  user-select: none;
 }
+
 .emoji-item:hover,
 .emoji-item:active {
   background: var(--accent-50);
+  transform: scale(1.12);
 }
 
-/* 侧栏 */
+/* ==========================================================================
+   13. 侧栏
+   ========================================================================== */
+
 .sidebar {
   width: 300px;
   background: var(--surface);
@@ -517,8 +1045,8 @@ body {
   flex-direction: column;
   position: relative;
   z-index: 98;
-  border-left: 1px solid var(--border);
 }
+
 .sidebar-header {
   padding: 14px 16px;
   border-bottom: 1px solid var(--border);
@@ -527,107 +1055,249 @@ body {
   align-items: center;
   gap: 8px;
 }
+
+.sidebar-close {
+  display: none;
+  margin-left: auto;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 9px;
+  background: var(--surface-2);
+  color: var(--muted);
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.sidebar-close:hover {
+  background: var(--accent-50);
+  color: var(--accent-600);
+}
+
 .users-list {
   flex: 1;
   padding: 10px;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  min-height: 0;
 }
+
 .user-item {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 12px;
+  padding: 10px 12px;
   border-radius: 10px;
   margin-bottom: 5px;
   transition: background 0.2s;
   min-height: 48px;
-  border: none;
-  background: transparent;
 }
+
 .user-item:hover {
   background: var(--surface-2);
-  box-shadow: inset 3px 0 0 var(--accent-600);
 }
-.user-item:active {
-  background: #f0f0f0;
+
+.user-item.is-self .user-name {
+  font-weight: 600;
 }
+
+.user-item .avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  font-size: 0.92rem;
+  box-shadow: none;
+}
+
+.user-name {
+  font-size: 0.9rem;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.self-badge {
+  margin-left: auto;
+  font-size: 0.68rem;
+  font-weight: 500;
+  color: var(--accent-600);
+  background: var(--accent-50);
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  flex-shrink: 0;
+}
+
 .user-status {
   width: 8px;
   height: 8px;
   border-radius: 50%;
   background: var(--success);
   flex-shrink: 0;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
 }
+
 .controls {
-  padding: 15px;
+  padding: 14px;
   border-top: 1px solid var(--border);
 }
+
 .control-btn {
   width: 100%;
-  padding: 12px;
+  padding: 11px 14px;
   margin-bottom: 10px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 10px;
   cursor: pointer;
-  transition: all 0.3s;
-  font-size: 0.9rem;
-  min-height: 48px;
+  transition: all 0.25s;
+  font-size: 0.88rem;
+  font-weight: 500;
+  min-height: 46px;
   background: var(--surface-2);
   color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
+
+.control-btn:last-child {
+  margin-bottom: 0;
+}
+
+.control-btn:hover {
+  border-color: #d1d5db;
+}
+
 .control-btn:active {
-  transform: scale(0.98);
+  transform: scale(0.985);
 }
+
+.control-btn i {
+  width: 18px;
+  text-align: center;
+}
+
+.control-btn.is-active {
+  background: var(--accent-gradient);
+  border-color: var(--accent-600);
+  color: #fff;
+}
+
 .clear-btn {
   background: var(--danger);
   border-color: var(--danger);
   color: #fff;
-}
-.clear-btn:active {
-  background: #dc2626;
-}
-.sound-toggle {
-  background: #f0f0f0;
-  color: #333;
-}
-.sound-toggle:active {
-  background: #e0e0e0;
-}
-.sound-toggle.active {
-  background: var(--accent-gradient);
-  border-color: var(--accent-600);
-  color: #fff;
-}
-.notification-toggle {
-  background: #f0f0f0;
-  color: #333;
-}
-.notification-toggle:active {
-  background: #e0e0e0;
-}
-.notification-toggle.active {
-  background: var(--accent-gradient);
-  border-color: var(--accent-600);
-  color: #fff;
+  justify-content: center;
 }
 
-/* 遮罩层 */
+.clear-btn:hover {
+  background: #dc2626;
+  border-color: #dc2626;
+}
+
+/* ==========================================================================
+   14. 遮罩 / 重连横幅 / 回到底部按钮
+   ========================================================================== */
+
 .mobile-overlay {
   display: none;
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  inset: 0;
+  background: rgba(17, 24, 39, 0.45);
   z-index: 97;
-}
-.mobile-overlay.show {
-  display: block;
+  backdrop-filter: blur(2px);
 }
 
-/* 动画 */
+.mobile-overlay.show {
+  display: block;
+  animation: fadeIn 0.2s ease-out;
+}
+
+/* 重连横幅 */
+.connection-banner {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  background: rgba(245, 158, 11, 0.12);
+  color: #92610a;
+  border-bottom: 1px solid rgba(245, 158, 11, 0.25);
+  font-size: 0.82rem;
+  font-weight: 500;
+  padding: 8px 14px;
+}
+
+.connection-banner.show {
+  display: flex;
+  animation: fadeIn 0.25s ease-out;
+}
+
+.connection-banner.is-error {
+  background: rgba(239, 68, 68, 0.08);
+  color: #b91c1c;
+  border-bottom-color: rgba(239, 68, 68, 0.22);
+}
+
+/* 回到底部按钮 */
+.jump-latest {
+  position: absolute;
+  right: 22px;
+  bottom: 82px;
+  width: 42px;
+  height: 42px;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--accent-600);
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  z-index: 20;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
+}
+
+.jump-latest.show {
+  display: flex;
+  animation: popIn 0.2s ease-out;
+}
+
+.jump-latest:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.jump-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: var(--radius-pill);
+  background: var(--danger);
+  color: #fff;
+  font-size: 0.66rem;
+  font-weight: 600;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+
+.jump-badge.show {
+  display: flex;
+}
+
+/* ==========================================================================
+   15. 动画
+   ========================================================================== */
+
 @keyframes slideIn {
   from {
     opacity: 0;
@@ -638,6 +1308,27 @@ body {
     transform: translateY(0);
   }
 }
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes popIn {
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 @keyframes typing {
   0% {
     opacity: 0.4;
@@ -652,6 +1343,7 @@ body {
     transform: translateY(0);
   }
 }
+
 @keyframes pulse {
   0% {
     opacity: 1;
@@ -664,188 +1356,266 @@ body {
   }
 }
 
-/* 滚动条 */
+@keyframes shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: 0 0;
+  }
+}
+
+/* ==========================================================================
+   16. 滚动条
+   ========================================================================== */
+
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
 }
+
 ::-webkit-scrollbar-thumb {
-  background: #c4c8d0;
-  border-radius: 999px;
+  background: #d1d5db;
+  border-radius: var(--radius-pill);
 }
+
 ::-webkit-scrollbar-thumb:hover {
-  background: #a6abb5;
+  background: #9ca3af;
 }
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* ==========================================================================
+   17. 响应式
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   17.1 平板及以下（≤1024px）：侧栏改为右侧抽屉
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 1024px) {
+  .chat-container {
+    max-width: 960px;
+  }
+
+  .mobile-nav-btn {
+    display: flex;
+  }
+
+  .online-users {
+    margin-left: 0;
+  }
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+    right: 0;
+    /* 隐藏时整体平移到视口右侧之外（宽度按屏宽收敛，见 480 断点） */
+    width: 300px;
+    height: 100dvh;
+    transform: translateX(105%);
+    box-shadow: -10px 0 30px rgba(17, 24, 39, 0.18);
+    transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+    z-index: 98;
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  .sidebar-close {
+    display: flex;
+  }
+
+  .chat-area {
+    border-right: none;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   17.2 手机（≤768px）：应用全屏化
+   -------------------------------------------------------------------------- */
+
 @media (max-width: 768px) {
+  body {
+    padding: 0;
+    background: var(--surface);
+  }
+
+  .chat-container {
+    height: var(--app-vh);
+    max-width: none;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .header {
+    padding: 12px 16px;
+  }
+
+  .app-title {
+    font-size: 1.1rem;
+  }
+
+  .app-title .title-mark {
+    width: 34px;
+    height: 34px;
+    font-size: 0.95rem;
+  }
+
+  .connection-pill {
+    font-size: 0.78rem;
+    padding: 5px 10px;
+  }
+
+  .connection-pill .pill-label {
+    display: none;
+  }
+
+  .connection-pill.is-connected .pill-label,
+  .connection-pill.is-connecting .pill-label {
+    display: inline;
+  }
+
+  .user-setup {
+    padding: 12px 16px;
+    gap: 10px;
+  }
+
+  .username-input {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .messages-container {
+    padding: 14px 12px 6px;
+  }
+
+  .message-bubble {
+    max-width: 88%;
+  }
+
+  .typing-indicator {
+    font-size: 0.78rem;
+    margin: 4px 12px 8px;
+  }
+
+  .emoji-picker {
+    left: 12px;
+    right: 12px;
+    bottom: 92px;
+    width: auto;
+    max-height: 190px;
+  }
+
+  .emoji-grid {
+    grid-template-columns: repeat(8, 1fr);
+    gap: 6px;
+  }
+
+  .emoji-item {
+    width: 34px;
+    height: 34px;
+    font-size: 19px;
+  }
+
+  .jump-latest {
+    right: 16px;
+    bottom: 76px;
+  }
+
   ::-webkit-scrollbar {
     width: 0;
     background: transparent;
   }
 }
 
-/* 响应式 */
-@media (max-width: 768px) {
-  body {
-    padding: 0;
-    overflow: hidden;
-  }
-  .chat-container {
-    height: calc(var(--vh) * 100);
-    min-height: 100dvh;
-    border-radius: 0;
-    max-width: none;
-  }
-  .header {
-    padding: 12px 16px;
-  }
-  .app-title {
-    font-size: 1.1rem;
-  }
-  .mobile-nav-btn {
-    display: flex;
-  }
-  .user-setup {
-    padding: 12px 15px;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 10px;
-  }
-  .user-info {
-    min-width: auto;
-  }
-  .online-users {
-    justify-content: center;
-    margin-left: 0;
-  }
-  .main-content {
-    flex-direction: row;
-  }
-  .sidebar {
-    position: fixed;
-    top: 0;
-    right: -280px;
-    height: calc(var(--vh) * 100);
-    width: 280px;
-    z-index: 98;
-    transition: right 0.3s ease;
-    box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
-  }
-  .sidebar.open {
-    right: 0;
-  }
-  .chat-area {
-    border-right: none;
-  }
-  .messages-container {
-    flex: 0 0 auto;
-    max-height: none;
-    padding: 12px;
-  }
-  .message-bubble {
-    max-width: 90%;
-  }
-  .emoji-picker {
-    inset: auto 12px 87px;
-    width: auto;
-    max-height: 180px;
-  }
-  .emoji-grid {
-    grid-template-columns: repeat(8, 1fr);
-    gap: 6px;
-  }
-  .emoji-item {
-    width: 32px;
-    height: 32px;
-    font-size: 18px;
-  }
-  .message-content {
-    font-size: 15px;
-    padding: 10px 14px;
-  }
-  .message-header {
-    font-size: 0.7rem;
-  }
-  .message-time {
-    font-size: 0.65rem;
-  }
-  .typing-indicator {
-    font-size: 0.8rem;
-    padding: 6px 12px;
-  }
-}
+/* --------------------------------------------------------------------------
+   17.3 小屏手机（≤480px）
+   -------------------------------------------------------------------------- */
 
 @media (max-width: 480px) {
-  .header h1 {
-    font-size: 1.2rem;
-  }
-  .username-input {
-    font-size: 16px;
-  }
-  .message-input {
-    font-size: 16px;
-    padding: 10px 14px;
-  }
-  .emoji-btn,
-  .send-btn {
-    width: 44px;
-    height: 44px;
-    font-size: 16px;
-  }
-  .input-container {
-    gap: 8px;
-  }
   .sidebar {
-    width: 260px;
-    right: -260px;
+    width: min(300px, 86vw);
   }
+
   .emoji-grid {
     grid-template-columns: repeat(7, 1fr);
   }
+
+  .input-area {
+    padding: 8px 12px;
+  }
+
+  .emoji-btn,
+  .send-btn {
+    width: 42px;
+    height: 42px;
+    font-size: 16px;
+  }
 }
 
-@media (max-width: 768px) and (orientation: landscape) {
+/* --------------------------------------------------------------------------
+   17.4 手机横屏：压缩纵向留白
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 900px) and (orientation: landscape) and (max-height: 500px) {
   .header {
-    padding: 8px 20px;
+    padding: 8px 16px;
   }
-  .header h1 {
-    font-size: 1.1rem;
-    margin-bottom: 4px;
-  }
+
   .user-setup {
-    padding: 8px 15px;
+    padding: 8px 16px;
   }
+
   .input-area {
-    padding: 10px 12px;
+    padding: 8px 12px;
+  }
+
+  .emoji-picker {
+    bottom: 68px;
+    max-height: 150px;
+  }
+
+  .jump-latest {
+    bottom: 60px;
   }
 }
 
-/* 安全区域适配 */
+/* ==========================================================================
+   18. 安全区域与减弱动效
+   ========================================================================== */
+
+/* 安全区域 */
 @supports (padding: max(0px)) {
-  .chat-container {
-    padding-left: max(0px, env(safe-area-inset-left));
-    padding-right: max(0px, env(safe-area-inset-right));
-  }
   .input-area {
-    padding-bottom: max(15px, env(safe-area-inset-bottom));
+    padding-bottom: max(10px, env(safe-area-inset-bottom));
   }
 }
 
-/* 自己消息气泡配色优化（更柔和、更易读） */
-:root {
-  --own-bubble-bg: rgba(16, 185, 129, 0.12);
-  --own-bubble-border: rgba(16, 185, 129, 0.35);
-  --own-bubble-text: var(--text);
+@media (max-width: 1024px) {
+  @supports (padding: max(0px)) {
+    .sidebar {
+      padding-top: max(0px, env(safe-area-inset-top));
+      height: calc(100dvh + env(safe-area-inset-top));
+    }
+  }
 }
-.message-bubble.own .message-content {
-  background: var(--own-bubble-bg);
-  color: var(--own-bubble-text);
-  box-shadow: inset -3px 0 0 var(--own-bubble-border),
-    0 6px 16px rgba(17, 24, 39, 0.05);
-}
-.message-bubble.own .message-content::before {
-  right: -10px;
-  border-left-color: var(--own-bubble-border);
-}
-.message-bubble.own .message-username {
-  color: var(--success);
+
+/* 用户偏好减弱动效：关闭非必要动画与平滑滚动 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .messages-container {
+    scroll-behavior: auto;
+  }
 }

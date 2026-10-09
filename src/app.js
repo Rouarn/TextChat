@@ -1,128 +1,80 @@
-// 应用主模块：组装 Express、Socket.IO、路由与中间件，并提供启动/关闭能力
+// 应用组装：Express + HTTP + Socket.IO + 唯一的 ChatServer。
+// 后端业务逻辑全部收敛到 src/chat/ChatServer.js，本文件只负责装配与启动。
+
 import express from "express";
 import http from "node:http";
-import { Server as SocketIOServer } from "socket.io";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import compression from "compression";
+import { Server as SocketIOServer } from "socket.io";
 
-// 导入配置和服务（ESM）
 import config from "../config/config.js";
-import Logger from "./services/logger.js";
-import UserService from "./services/userService.js";
-import MessageService from "./services/messageService.js";
-import SocketController from "./controllers/socketController.js";
-import apiRoutes from "./routes/api.js";
-import notFound from "./middleware/notFound.js";
-import errorHandler from "./middleware/errorHandler.js";
+import { ChatServer } from "./chat/ChatServer.js";
 
-// 创建Express应用与 Socket.IO 服务
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
 const app = express();
 const server = http.createServer(app);
-const io = new SocketIOServer(server, {
-  cors: config.cors,
-});
 
-// 应用基础安全/网络设定
 app.disable("x-powered-by");
-app.set("trust proxy", (config.server && config.server.trustProxy) || false);
-
-// 启用压缩以提升传输效率
 app.use(compression());
 
-// 初始化服务
-const userService = new UserService();
-const messageService = new MessageService();
-const socketController = new SocketController(userService, messageService);
-
-// 将服务实例存储到app.locals中，供路由使用
-app.locals.userService = userService;
-app.locals.messageService = messageService;
-
-// 兼容 ESM 与 CJS 的路径解析
-const isCJS =
-  typeof __dirname !== "undefined" && typeof __filename !== "undefined";
-const resolvedFilename = isCJS ? __filename : fileURLToPath(import.meta.url);
-const resolvedDirname = isCJS ? __dirname : path.dirname(resolvedFilename);
-
-// 静态文件服务 - 启用缓存/ETag/不可变资源提示
-// 固定使用 public 目录（不区分环境）
-const staticRoot = path.join(resolvedDirname, "../public");
+// 静态文件
+// 注意：文件名不含内容哈希，不能用长 maxAge 强缓存——否则内容更新后，
+// 浏览器在缓存期内根本不发请求，会一直跑旧代码（曾因此报 io is not defined）。
+// 统一用 no-cache 协商缓存：每次请求校验 ETag，未变返回 304（开销极小），
+// 一变立即拿到新内容。
 app.use(
-  express.static(staticRoot, {
-    maxAge: "7d",
+  express.static(path.join(__dirname, "../public"), {
     etag: true,
     lastModified: true,
-    immutable: true,
-  })
+    setHeaders: res => {
+      res.setHeader("Cache-Control", "no-cache");
+    },
+  }),
 );
 
-// API路由
-app.use("/api", apiRoutes);
+// Socket.IO（同源访问，无需额外 CORS 配置）
+const io = new SocketIOServer(server);
+const chatServer = new ChatServer(io, config.chat);
 
-// 404 与错误处理中间件
-app.use(notFound);
-app.use(errorHandler);
-
-// Socket.IO连接处理：交由控制器统一管理事件与逻辑
-io.on("connection", socket => {
-  socketController.handleConnection(socket, io);
+// 唯一的 HTTP 接口：健康检查（含实时统计）
+app.get("/api/health", (req, res) => {
+  res.json({
+    success: true,
+    data: {
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      onlineUsers: chatServer.userCount,
+      totalMessages: chatServer.messageCount,
+    },
+  });
 });
-
-// 全局错误处理
-process.on("uncaughtException", error => {
-  Logger.error("未捕获的异常", { error: error.message, stack: error.stack });
-  process.exit(1);
-});
-
-process.on("unhandledRejection", (reason, promise) => {
-  Logger.error("未处理的Promise拒绝", { reason: reason, promise: promise });
-});
-
-// 定期清理任务
-setInterval(() => {
-  userService.cleanupInactiveUsers(config.chat.userInactiveThreshold, io);
-}, config.chat.cleanupInterval);
-
-setInterval(() => {
-  userService.cleanupTypingIndicators(config.chat.typingTimeout, io);
-}, 1000);
 
 /**
- * 启动服务器
- * - 监听配置端口
- * - 输出启动信息与可访问端点
+ * 启动服务器。
  */
 export function startServer() {
   server.listen(config.server.port, () => {
-    Logger.info(`聊天服务器启动成功`, {
-      port: config.server.port,
-      pid: process.pid,
-    });
-
     console.log(`
 ╔═════════════════════════════════════
-║        实时文本聊天系统 - 优化版                               
-║                                                                
-║  🚀 服务器运行在: http://localhost:${config.server.port}       
-║  📊 健康检查: http://localhost:${config.server.port}/api/health
-║  📈 统计信息: http://localhost:${config.server.port}/api/stats 
-║                                      
+║        实时文本聊天系统 v3.0
+║
+║  服务器运行在: http://localhost:${config.server.port}
+║  健康检查:     http://localhost:${config.server.port}/api/health
 ╚══════════════════════════════════════
-        `);
+`);
   });
 }
 
 /**
- * 优雅关闭：
- * - 响应终止信号
- * - 停止接收新连接并在关闭后退出
+ * 优雅关闭。
  * @param {string} signal
  */
 function gracefulShutdown(signal) {
-  Logger.info(`收到${signal}信号，开始优雅关闭`);
+  console.log(`收到 ${signal} 信号，开始关闭服务器`);
   server.close(() => {
-    Logger.info("服务器已关闭");
+    io.close();
     process.exit(0);
   });
 }
@@ -130,4 +82,4 @@ function gracefulShutdown(signal) {
 process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
 process.on("SIGINT", () => gracefulShutdown("SIGINT"));
 
-export { app, server, io };
+export { app, server, io, chatServer };
