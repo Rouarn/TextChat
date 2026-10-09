@@ -9,6 +9,14 @@ import { fileURLToPath } from 'node:url';
 import compression from 'compression';
 import { Server as SocketIOServer } from 'socket.io';
 
+import {
+  showBanner,
+  showSuccess,
+  handleError,
+  log,
+  colors,
+} from '@vakao-ui/scripts-utils';
+
 import { config } from '@text-chat/shared';
 import { ChatServer } from './chat/ChatServer.js';
 
@@ -63,16 +71,22 @@ app.get('/api/health', (req, res) => {
  * 启动服务器。
  */
 export function startServer() {
+  // 启动失败（如端口被占用）：统一错误输出并退出
+  server.on('error', (err) => handleError('服务器启动失败', err));
+
   server.listen(config.server.port, () => {
-    console.log(`
-╔═════════════════════════════════════
-║        实时文本聊天系统 v4.0
-║
-║  服务器运行在:  http://localhost:${config.server.port}
-║  前端运行在:    http://localhost:${config.server.frontendPort}/
-║  健康检查:      http://localhost:${config.server.port}/api/health
-╚══════════════════════════════════════
-`);
+    showBanner('实时文本聊天系统 v4.0');
+    log(
+      `服务器运行在  ${colors.cyan}http://localhost:${config.server.port}${colors.reset}`,
+    );
+    log(
+      `前端运行在    ${colors.cyan}http://localhost:${config.server.frontendPort}/${colors.reset}`,
+    );
+    log(
+      `健康检查      ${colors.cyan}http://localhost:${config.server.port}/api/health${colors.reset}`,
+      'check',
+    );
+    showSuccess('服务器已启动，等待客户端连接');
   });
 }
 
@@ -81,9 +95,10 @@ export function startServer() {
  * @param {string} signal
  */
 function gracefulShutdown(signal) {
-  console.log(`收到 ${signal} 信号，开始关闭服务器`);
+  log(`收到 ${signal} 信号，开始关闭服务器`, 'warning');
   server.close(() => {
     io.close();
+    showSuccess('服务器已安全关闭');
     process.exit(0);
   });
 }

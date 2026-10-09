@@ -20,6 +20,9 @@ importers:
       '@text-chat/shared':
         specifier: workspace:*
         version: link:../shared
+      '@vakao-ui/scripts-utils':
+        specifier: ^0.0.2
+        version: 0.0.2
       '@vakao-ui/socket-system':
         specifier: ^0.0.2
         version: 0.0.2(supports-color@10.2.2)
@@ -220,6 +223,10 @@ packages:
 
   '@types/ws@8.18.2':
     resolution: {integrity: sha512-67MQl+fpWKVTT1NYdnmo3U4sc/xPo/zQBncVnI74qmQa0z/b+1g6iYqNmGCPbxO+zz2aklb08a0oHfegiVd0/w==}
+
+  '@vakao-ui/scripts-utils@0.0.2':
+    resolution: {integrity: sha512-4rdfj/Q4cNBp5gSX9muW8umUCPMkZZPsITOOx0BdPtgQOiJdNwJVSjY3pMuEhPZ3eag10xtpcVfZKWuB2RKucA==, tarball: https://packages.aliyun.com/676d377c721f4dc7be6ca65a/npm/npm-registry/@vakao-ui/scripts-utils/-/@vakao-ui/scripts-utils-0.0.2.tgz}
+    engines: {node: '>=18'}
 
   '@vakao-ui/socket-system@0.0.2':
     resolution: {integrity: sha512-MBmFn1ea+giwyfnvtesf1beQmkyPDS6qbtKM82wbJhc2qEZK/bDPcA6ldSeCsrztl+Z5wI0BYqbzquWJNPgOKQ==, tarball: https://packages.aliyun.com/676d377c721f4dc7be6ca65a/npm/npm-registry/@vakao-ui/socket-system/-/@vakao-ui/socket-system-0.0.2.tgz}
@@ -1030,6 +1037,8 @@ snapshots:
   '@types/ws@8.18.2':
     dependencies:
       '@types/node': 26.6.4
+
+  '@vakao-ui/scripts-utils@0.0.2': {}
 
   '@vakao-ui/socket-system@0.0.2(supports-color@10.2.2)':
     dependencies:
