@@ -1,32 +1,25 @@
 {
   "name": "text-chat",
-  "version": "3.0.0",
-  "description": "实时文本聊天应用 - 基于 @vakao-ui/socket-system 重构",
+  "version": "4.0.0",
+  "private": true,
+  "description": "实时文本聊天应用 - pnpm monorepo",
   "type": "module",
-  "main": "src/server.js",
   "scripts": {
-    "start": "node src/server.js",
-    "vendor": "esbuild vendor/entry.js --bundle --format=esm --platform=browser --target=es2020 --minify --outfile=public/vendor/socket-system.bundle.js"
-  },
-  "dependencies": {
-    "@vakao-ui/socket-system": "^0.0.2",
-    "compression": "^1.8.1",
-    "express": "^4.18.2",
-    "socket.io": "^4.7.2",
-    "socket.io-client": "^4.8.4"
+    "dev": "concurrently -n backend,frontend -c green,blue \"pnpm --filter @text-chat/backend dev\" \"pnpm --filter @text-chat/frontend dev\"",
+    "dev:backend": "pnpm --filter @text-chat/backend dev",
+    "dev:frontend": "pnpm --filter @text-chat/frontend dev",
+    "build": "pnpm --filter @text-chat/frontend build",
+    "build:frontend": "pnpm --filter @text-chat/frontend build",
+    "start": "pnpm --filter @text-chat/backend start",
+    "lint": "pnpm -r lint",
+    "format": "prettier --write \"packages/**/*.{js,vue,json}\""
   },
   "devDependencies": {
-    "esbuild": "^0.24.0"
+    "concurrently": "^10.0.5",
+    "prettier": "^3.9.9"
   },
-  "keywords": [
-    "chat",
-    "realtime",
-    "websocket",
-    "socket.io"
-  ],
-  "author": "Chat App Team",
-  "license": "MIT",
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=22.18.0",
+    "pnpm": ">=10.15.0"
   }
 }

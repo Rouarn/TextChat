@@ -1,0 +1,23 @@
+{
+  "name": "@text-chat/backend",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js",
+    "build": "echo \"backend: no build step\"",
+    "lint": "echo \"backend: no linter\"",
+    "format": "prettier --write src"
+  },
+  "dependencies": {
+    "@text-chat/shared": "workspace:*",
+    "@vakao-ui/socket-system": "^0.0.2",
+    "compression": "^1.8.1",
+    "express": "^4.18.2",
+    "socket.io": "^4.7.2"
+  },
+  "engines": {
+    "node": ">=22.18.0"
+  }
+}

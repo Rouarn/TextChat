@@ -1,0 +1,24 @@
+{
+  "name": "@text-chat/frontend",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "echo \"frontend: no linter\"",
+    "format": "prettier --write src/"
+  },
+  "dependencies": {
+    "@text-chat/shared": "workspace:*",
+    "@vakao-ui/socket-system": "^0.0.2",
+    "naive-ui": "^2.44.1",
+    "socket.io-client": "^4.8.4",
+    "vue": "^3.5.38"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^6.0.7",
+    "vite": "^8.1.0"
+  }
+}

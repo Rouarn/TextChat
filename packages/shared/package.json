@@ -1,0 +1,19 @@
+{
+  "name": "@text-chat/shared",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./config": "./src/config.js",
+    "./events": "./src/events.js",
+    "./utils": "./src/utils.js"
+  },
+  "scripts": {
+    "dev": "echo \"shared: no build step\"",
+    "build": "echo \"shared: no build step\"",
+    "lint": "echo \"shared: no linter\"",
+    "format": "prettier --write src/"
+  }
+}
