@@ -26,12 +26,7 @@
       </n-button>
     </n-badge>
 
-    <n-tag
-      :type="statusType"
-      size="small"
-      round
-      class="connection-pill"
-    >
+    <n-tag :type="statusType" size="small" round class="connection-pill">
       <template #icon>
         <n-icon size="14">
           <component :is="statusIcon" />

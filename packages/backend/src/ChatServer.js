@@ -74,22 +74,21 @@ export class ChatServer {
     socket.on(ClientCommand.JoinRoom, (payload, ack) =>
       this.#join(socket, payload, ack),
     );
-    socket.on(ClientCommand.LeaveRoom, (payload, ack) =>
-      this.#leave(socket, payload, ack),
+    socket.on(ClientCommand.LeaveRoom, (_payload, ack) =>
+      this.#leave(socket, ack),
     );
     socket.on(ClientCommand.SendMessage, (payload, ack) =>
       this.#sendMessage(socket, payload, ack),
     );
-    socket.on(ClientCommand.GetRooms, (payload, ack) => this.#listRooms(ack));
-
+    socket.on(ClientCommand.GetRooms, (_payload, ack) => this.#listRooms(ack));
     socket.on(ExtensionEvent.ProfileUpdate, (payload) =>
       this.#updateProfile(socket, payload),
     );
-    socket.on(ExtensionEvent.TypingStart, (payload) =>
-      this.#relayTyping(socket, true, payload),
+    socket.on(ExtensionEvent.TypingStart, () =>
+      this.#relayTyping(socket, true),
     );
-    socket.on(ExtensionEvent.TypingStop, (payload) =>
-      this.#relayTyping(socket, false, payload),
+    socket.on(ExtensionEvent.TypingStop, () =>
+      this.#relayTyping(socket, false),
     );
     socket.on(ExtensionEvent.MessagesClear, () => this.#clear(socket));
 
@@ -145,7 +144,7 @@ export class ChatServer {
   /**
    * leave-room：显式离开，立即移除在线状态。
    */
-  #leave(socket, payload, ack) {
+  #leave(socket, ack) {
     const reply = (response) => {
       if (typeof ack === 'function') ack(response);
     };

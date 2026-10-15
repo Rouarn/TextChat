@@ -1,5 +1,5 @@
-// 应用组装：Express + HTTP + Socket.IO + 唯一的 ChatServer。
-// 后端业务逻辑全部收敛到 src/chat/ChatServer.js，本文件只负责装配与启动。
+// 应用组装与启动：Express + HTTP + Socket.IO + 唯一的 ChatServer。
+// 后端业务逻辑全部收敛到 src/ChatServer.js，本文件只负责装配与启动。
 
 import express from 'express';
 import http from 'node:http';
@@ -18,7 +18,7 @@ import {
 } from '@vakao-ui/scripts-utils';
 
 import { config } from '@text-chat/shared';
-import { ChatServer } from './chat/ChatServer.js';
+import { ChatServer } from './ChatServer.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -29,8 +29,15 @@ app.disable('x-powered-by');
 app.use(compression());
 
 // 静态文件：生产环境从 frontend/dist 提供服务
-const frontendDist = path.join(__dirname, '../../frontend/dist');
+// 部署布局（deploy/）下 start-app.js 会 chdir 到部署目录，前端产物位于 ./web；
+// 开发（monorepo）布局下回退到 ../../frontend/dist
+const deployWebDir = path.join(process.cwd(), 'web');
+const monorepoDist = path.join(__dirname, '../../frontend/dist');
+const frontendDist = fs.existsSync(deployWebDir) ? deployWebDir : monorepoDist;
+// 是否由本进程托管前端静态资源（生产模式）
+let servingStatic = false;
 if (fs.existsSync(frontendDist)) {
+  servingStatic = true;
   // 文件名不含内容哈希时不能用长 maxAge 强缓存，统一用 no-cache 协商缓存
   app.use(
     express.static(frontendDist, {
@@ -55,7 +62,7 @@ const io = new SocketIOServer(server);
 const chatServer = new ChatServer(io, config.chat);
 
 // 唯一的 HTTP 接口：健康检查（含实时统计）
-app.get('/api/health', (req, res) => {
+app.get('/api/health', (_req, res) => {
   res.json({
     success: true,
     data: {
@@ -70,7 +77,7 @@ app.get('/api/health', (req, res) => {
 /**
  * 启动服务器。
  */
-export function startServer() {
+function startServer() {
   // 启动失败（如端口被占用）：统一错误输出并退出
   server.on('error', (err) => handleError('服务器启动失败', err));
 
@@ -79,9 +86,16 @@ export function startServer() {
     log(
       `服务器运行在  ${colors.cyan}http://localhost:${config.server.port}${colors.reset}`,
     );
-    log(
-      `前端运行在    ${colors.cyan}http://localhost:${config.server.frontendPort}/${colors.reset}`,
-    );
+    // 生产模式：前端静态资源由本进程同端口托管；开发模式：Vite 独立端口
+    if (servingStatic) {
+      log(
+        `前端托管在同端口  ${colors.cyan}http://localhost:${config.server.port}/${colors.reset}`,
+      );
+    } else {
+      log(
+        `前端运行在    ${colors.cyan}http://localhost:${config.server.frontendPort}/${colors.reset}`,
+      );
+    }
     log(
       `健康检查      ${colors.cyan}http://localhost:${config.server.port}/api/health${colors.reset}`,
       'check',
@@ -89,6 +103,8 @@ export function startServer() {
     showSuccess('服务器已启动，等待客户端连接');
   });
 }
+
+startServer();
 
 /**
  * 优雅关闭。
@@ -105,5 +121,3 @@ function gracefulShutdown(signal) {
 
 process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 process.on('SIGINT', () => gracefulShutdown('SIGINT'));
-
-export { app, server, io, chatServer };

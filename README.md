@@ -1,4 +1,4 @@
-# 实时文本聊天系统 v3
+# 实时文本聊天系统 v4
 
 一个基于 Node.js、Express、Socket.IO 的实时聊天应用，前后端统一使用
 `@vakao-ui/socket-system`（npm 正式发布包）作为 Socket 层。
@@ -17,44 +17,38 @@
 ## 项目结构
 
 ```
-text-chat/
-├── config/
-│   └── config.js            # 静态配置（端口、聊天参数）
-├── src/
-│   ├── server.js            # 入口：调用 startServer()
-│   ├── app.js               # 装配 Express / Socket.IO / ChatServer
-│   └── chat/
-│       └── ChatServer.js    # 后端唯一的 Socket 业务模块（协议实现）
-├── public/
-│   ├── index.html
-│   ├── css/style.css
-│   ├── assets/
-│   ├── js/
-│   │   └── app.js           # 前端唯一模块
-│   └── vendor/
-│       └── socket-system.bundle.js  # 库 + socket.io-client 的预打包 ESM
-├── vendor/
-│   └── entry.js             # esbuild 打包入口
+text-chat/                      # pnpm monorepo
+├── packages/
+│   ├── shared/                 # @text-chat/shared：前后端共享配置与工具
+│   │   └── src/
+│   ├── backend/                # @text-chat/backend：Express + Socket.IO 服务端
+│   │   └── src/
+│   │       ├── app.js          # 入口：装配 Express / Socket.IO / ChatServer 并启动
+│   │       └── ChatServer.js   # 唯一的 Socket 业务模块（协议实现）
+│   └── frontend/               # @text-chat/frontend：Vue 3 + Vite 客户端
+│       └── src/
+├── script/
+│   └── deploy.js               # 部署打包脚本（输出 deploy/）
 └── package.json
 ```
 
 ## 快速开始
 
-前置条件：Node.js >= 18。
+前置条件：Node.js >= 22.18、pnpm >= 10.15。
 
 ```bash
 pnpm install
-pnpm start
+pnpm dev          # 同时启动后端(9765)与前端 Vite 开发服务器(9766)
 ```
 
-> `public/vendor/socket-system.bundle.js` 是随仓库提交的预打包产物，无需重新生成。
-> 仅当升级 `@vakao-ui/socket-system` 后，执行 `pnpm run vendor` 刷新它。
+开发模式访问 http://localhost:9766。
 
-访问 http://localhost:9765。
+生产部署：`pnpm run deploy` 生成 `deploy/` 目录，上传服务器后执行
+`./install.sh && ./start.sh`，由后端在 9765 同端口托管前端静态资源。
 
 ## 配置
 
-所有配置均在 [config/config.js](config/config.js)：
+所有配置均在 [packages/shared/src/config.js](packages/shared/src/config.js)：
 
 - `server.port`：服务端口（默认 9765）
 - `chat.roomId`：聊天房间 ID（默认 `lobby`）

@@ -38,7 +38,13 @@
         @keydown.enter="save"
         @keydown.esc="cancel"
       />
-      <n-button quaternary circle size="small" aria-label="取消" @click="cancel">
+      <n-button
+        quaternary
+        circle
+        size="small"
+        aria-label="取消"
+        @click="cancel"
+      >
         <template #icon>
           <n-icon><CloseOutline /></n-icon>
         </template>

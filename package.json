@@ -8,9 +8,11 @@
     "dev": "concurrently -n backend,frontend -c green,blue \"pnpm --filter @text-chat/backend dev\" \"pnpm --filter @text-chat/frontend dev\"",
     "dev:backend": "pnpm --filter @text-chat/backend dev",
     "dev:frontend": "pnpm --filter @text-chat/frontend dev",
-    "build": "pnpm --filter @text-chat/frontend build",
+    "build": "pnpm -r --filter @text-chat/shared --filter @text-chat/backend --filter @text-chat/frontend build",
+    "build:shared": "pnpm --filter @text-chat/shared build",
+    "build:backend": "pnpm --filter @text-chat/backend build",
     "build:frontend": "pnpm --filter @text-chat/frontend build",
-    "start": "pnpm --filter @text-chat/backend start",
+    "deploy": "node script/deploy.js",
     "lint": "pnpm -r lint",
     "format": "prettier --write \"packages/**/*.{js,vue,json}\""
   },
