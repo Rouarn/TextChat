@@ -4,5 +4,5 @@ nodeLinker: hoisted
 allowBuilds:
   esbuild: false
 minimumReleaseAgeExclude:
-  - "@vakao-ui/socket-system@0.0.2"
-  - "@vakao-ui/scripts-utils@0.0.3"
+  - "@vakao/socket-system@0.0.2"
+  - "@vakao/scripts-utils@0.0.3"

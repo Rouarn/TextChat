@@ -29,7 +29,7 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// ---------- 日志辅助（不依赖 @vakao-ui/scripts-utils，避免私有仓库依赖） ----------
+// ---------- 日志辅助（不依赖 @vakao/scripts-utils，避免私有仓库依赖） ----------
 const colors = {
   reset: '\x1b[0m',
   magenta: '\x1b[35m',

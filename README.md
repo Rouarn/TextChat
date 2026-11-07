@@ -1,7 +1,7 @@
 # 实时文本聊天系统 v4
 
 一个基于 Node.js、Express、Socket.IO 的实时聊天应用，前后端统一使用
-`@vakao-ui/socket-system`（npm 正式发布包）作为 Socket 层。
+`@vakao/socket-system`（npm 正式发布包）作为 Socket 层。
 
 ## 功能特性
 

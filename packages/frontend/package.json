@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@text-chat/shared": "workspace:*",
-    "@vakao-ui/socket-system": "^0.0.2",
+    "@vakao/socket-system": "^0.0.2",
     "@vicons/ionicons5": "^0.13.0",
     "naive-ui": "^2.44.1",
     "socket.io-client": "^4.8.4",

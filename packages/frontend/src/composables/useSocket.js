@@ -1,4 +1,4 @@
-import { createSocket } from '@vakao-ui/socket-system';
+import { createSocket } from '@vakao/socket-system';
 import { ExtensionEvent, config } from '@text-chat/shared';
 import { useChat } from './useChat';
 import { useSettings } from './useSettings';

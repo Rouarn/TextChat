@@ -1,7 +1,7 @@
 /*
  * 库协议之外的本应用扩展事件（前后端共享，需保持一致）。
  *
- * 库标准事件（由 @vakao-ui/socket-system 定义）：
+ * 库标准事件（由 @vakao/socket-system 定义）：
  *   ClientCommand: join-room / leave-room / send-message / get-rooms
  *   SocketEvent:   message
  *

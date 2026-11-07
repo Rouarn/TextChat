@@ -1,11 +1,11 @@
 // ChatServer：整个后端唯一的 Socket 业务模块。
 //
-// 严格实现 @vakao-ui/socket-system 约定的服务端协议：
+// 严格实现 @vakao/socket-system 约定的服务端协议：
 //   客户端命令（带 ack）：join-room / leave-room / send-message / get-rooms
 //   服务端广播：message（标准 MessageData）
 // 在此基础上仅扩展聊天必需的少量自定义事件（见 @text-chat/shared/events.js）。
 
-import { ClientCommand, SocketEvent } from '@vakao-ui/socket-system';
+import { ClientCommand, SocketEvent } from '@vakao/socket-system';
 import { ExtensionEvent, clampText, uid, config } from '@text-chat/shared';
 
 const { defaults } = config;
@@ -186,7 +186,7 @@ export class ChatServer {
       return reply({ success: false, error: '消息内容不能为空' });
     }
 
-    /** @type {import("@vakao-ui/socket-system").MessageData & { username: string, avatar: string }} */
+    /** @type {import("@vakao/socket-system").MessageData & { username: string, avatar: string }} */
     const message = {
       id:
         typeof payload?.id === 'string' && payload.id.trim()

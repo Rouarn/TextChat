@@ -15,7 +15,7 @@ import {
   handleError,
   log,
   colors,
-} from '@vakao-ui/scripts-utils';
+} from '@vakao/scripts-utils';
 
 import { config } from '@text-chat/shared';
 import { ChatServer } from './ChatServer.js';

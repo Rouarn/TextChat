@@ -20,10 +20,10 @@ importers:
       '@text-chat/shared':
         specifier: workspace:*
         version: link:../shared
-      '@vakao-ui/scripts-utils':
+      '@vakao/scripts-utils':
         specifier: ^0.0.3
         version: 0.0.3
-      '@vakao-ui/socket-system':
+      '@vakao/socket-system':
         specifier: ^0.0.2
         version: 0.0.2(supports-color@10.2.2)
       compression:
@@ -41,7 +41,7 @@ importers:
       '@text-chat/shared':
         specifier: workspace:*
         version: link:../shared
-      '@vakao-ui/socket-system':
+      '@vakao/socket-system':
         specifier: ^0.0.2
         version: 0.0.2(supports-color@10.2.2)
       '@vicons/ionicons5':
@@ -224,12 +224,12 @@ packages:
   '@types/ws@8.18.2':
     resolution: {integrity: sha512-67MQl+fpWKVTT1NYdnmo3U4sc/xPo/zQBncVnI74qmQa0z/b+1g6iYqNmGCPbxO+zz2aklb08a0oHfegiVd0/w==}
 
-  '@vakao-ui/scripts-utils@0.0.3':
-    resolution: {integrity: sha512-ss52FJBvLqB8QdZwe8D7MGOB88cwQFIFhGEXYW/phq4t3peOqmUFGQUSX13WoNb8hLgonpT3vlHV9xhWeDbyGg==, tarball: https://packages.aliyun.com/676d377c721f4dc7be6ca65a/npm/npm-registry/@vakao-ui/scripts-utils/-/@vakao-ui/scripts-utils-0.0.3.tgz}
+  '@vakao/scripts-utils@0.0.3':
+    resolution: {integrity: sha512-NyvKDgZdwqC8gEnQVbhh7/JW1J8OsCBaWj/GA4gUTBSBh0qwGrIgcQopcergetnXEIW7ev7uh3V3B0rGcTQyXw==, tarball: https://packages.aliyun.com/676d377c721f4dc7be6ca65a/npm/npm-registry/@vakao/scripts-utils/-/@vakao/scripts-utils-0.0.3.tgz}
     engines: {node: '>=18'}
 
-  '@vakao-ui/socket-system@0.0.2':
-    resolution: {integrity: sha512-MBmFn1ea+giwyfnvtesf1beQmkyPDS6qbtKM82wbJhc2qEZK/bDPcA6ldSeCsrztl+Z5wI0BYqbzquWJNPgOKQ==, tarball: https://packages.aliyun.com/676d377c721f4dc7be6ca65a/npm/npm-registry/@vakao-ui/socket-system/-/@vakao-ui/socket-system-0.0.2.tgz}
+  '@vakao/socket-system@0.0.2':
+    resolution: {integrity: sha512-652jWHJKd7ISkjmHfP601uKiOF1IHVMtS0bx3THSgMg/GibFT6c5I0o++ZieskXQjSf4DmJZ0UpCGIn/fvZdng==, tarball: https://packages.aliyun.com/676d377c721f4dc7be6ca65a/npm/npm-registry/@vakao/socket-system/-/@vakao/socket-system-0.0.2.tgz}
     engines: {node: '>=18'}
 
   '@vicons/ionicons5@0.13.0':
@@ -1038,9 +1038,9 @@ snapshots:
     dependencies:
       '@types/node': 26.6.4
 
-  '@vakao-ui/scripts-utils@0.0.3': {}
+  '@vakao/scripts-utils@0.0.3': {}
 
-  '@vakao-ui/socket-system@0.0.2(supports-color@10.2.2)':
+  '@vakao/socket-system@0.0.2(supports-color@10.2.2)':
     dependencies:
       socket.io-client: 4.8.4(supports-color@10.2.2)
     transitivePeerDependencies:
